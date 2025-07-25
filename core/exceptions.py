@@ -74,7 +74,8 @@ async def validation_exception_handler(request: Request, exc: Exception):
 
 
 def setup_exception_handlers(app):
-    app.add_exception_handler(CustomHTTPException, custom_http_exception_handler)
+    app.add_exception_handler(
+        CustomHTTPException, custom_http_exception_handler)
     app.add_exception_handler(HTTPException, generic_http_exception_handler)
     app.add_exception_handler(Exception, validation_exception_handler)
     app.add_exception_handler(Exception, validation_exception_handler)

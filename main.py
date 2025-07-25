@@ -7,7 +7,8 @@ from core.exceptions import setup_exception_handlers
 app = FastAPI(
     title="Calendar API",
     description="A REST API for calendar management with user authentication",
-    version="1.0.0"
+    version="1.0.0",
+    redoc_url=None
 )
 
 app.add_middleware(

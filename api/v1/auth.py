@@ -20,7 +20,7 @@ async def signup(user: UserCreate, db: AsyncSession = Depends(get_db)):
             error_code=ErrorCode.USER_EXISTS,
             detail="Email already registered"
         )
-    
+
     existing_user_username = await get_user_by_username(db, username=user.username)
     if existing_user_username:
         raise CustomHTTPException(
@@ -28,7 +28,7 @@ async def signup(user: UserCreate, db: AsyncSession = Depends(get_db)):
             error_code=ErrorCode.USER_EXISTS,
             detail="Username already taken"
         )
-    
+
     db_user = await create_user(db=db, user=user)
     return db_user
 
@@ -42,10 +42,10 @@ async def login(user_credentials: UserLogin, db: AsyncSession = Depends(get_db))
             error_code=ErrorCode.INVALID_CREDENTIALS,
             detail="Incorrect email or password"
         )
-    
+
     access_token = create_access_token(data={"sub": str(user.id)})
     refresh_token = create_refresh_token(data={"sub": str(user.id)})
-    
+
     return {
         "access_token": access_token,
         "refresh_token": refresh_token,
@@ -58,8 +58,9 @@ async def refresh_token(
     refresh_request: RefreshTokenRequest,
     db: AsyncSession = Depends(get_db)
 ):
-    token_data = verify_token(refresh_request.refresh_token, token_type="refresh")
-    
+    token_data = verify_token(
+        refresh_request.refresh_token, token_type="refresh")
+
     user = await get_user_by_id(db, user_id=token_data.user_id)
     if not user:
         raise CustomHTTPException(
@@ -67,17 +68,17 @@ async def refresh_token(
             error_code=ErrorCode.AUTHENTICATION_ERROR,
             detail="User not found"
         )
-    
+
     if not user.is_active:
         raise CustomHTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             error_code=ErrorCode.AUTHENTICATION_ERROR,
             detail="Inactive user"
         )
-    
+
     access_token = create_access_token(data={"sub": str(user.id)})
     new_refresh_token = create_refresh_token(data={"sub": str(user.id)})
-    
+
     return {
         "access_token": access_token,
         "refresh_token": new_refresh_token,

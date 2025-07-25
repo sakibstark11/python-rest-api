@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, EmailStr, validator
+from pydantic import BaseModel, EmailStr, field_validator
 
 
 class UserBase(BaseModel):
@@ -14,7 +14,7 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     password: str
 
-    @validator('password')
+    @field_validator('password')
     def validate_password(cls, v):
         if len(v) < 8:
             raise ValueError('Password must be at least 8 characters long')
@@ -28,7 +28,7 @@ class UserCreate(UserBase):
             raise ValueError('Password must contain at least one digit')
         return v
 
-    @validator('username')
+    @field_validator('username')
     def validate_username(cls, v):
         if len(v) < 3:
             raise ValueError('Username must be at least 3 characters long')
@@ -57,7 +57,7 @@ class UserUpdate(BaseModel):
     first_name: Optional[str] = None
     last_name: Optional[str] = None
 
-    @validator('first_name', 'last_name')
+    @field_validator('first_name', 'last_name')
     def validate_names(cls, v):
         if v is not None and len(v.strip()) == 0:
             raise ValueError('Name cannot be empty')

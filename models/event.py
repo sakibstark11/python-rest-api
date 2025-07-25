@@ -16,11 +16,12 @@ class Event(Base):
     end_time = Column(DateTime(timezone=True), nullable=False)
     location = Column(String)
     creator_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    created_at = Column(DateTime(timezone=True), default=func.now)
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now)
 
     creator = relationship("User", back_populates="events")
-    participants = relationship("UserEvent", back_populates="event", cascade="all, delete-orphan")
+    participants = relationship(
+        "UserEvent", back_populates="event", cascade="all, delete-orphan")
 
     __table_args__ = (
         Index('ix_events_creator_start_time', 'creator_id', 'start_time'),

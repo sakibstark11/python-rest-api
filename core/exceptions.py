@@ -1,7 +1,7 @@
 from enum import Enum
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 
 
@@ -27,7 +27,7 @@ class CustomHTTPException(HTTPException):
         status_code: int,
         error_code: ErrorCode,
         detail: str,
-        headers: Dict[str, Any] = None
+        headers: Optional[Dict[str, Any]] = None
     ):
         super().__init__(status_code=status_code, detail=detail, headers=headers)
         self.error_code = error_code
@@ -46,7 +46,7 @@ async def custom_http_exception_handler(_, exc: CustomHTTPException):
     )
 
 
-async def generic_http_exception_handler(request: Request, exc: HTTPException):
+async def generic_http_exception_handler(_, exc: HTTPException):
     return JSONResponse(
         status_code=exc.status_code,
         content={
@@ -59,7 +59,7 @@ async def generic_http_exception_handler(request: Request, exc: HTTPException):
     )
 
 
-async def validation_exception_handler(request: Request, exc: Exception):
+async def validation_exception_handler(_, exc: Exception):
     return JSONResponse(
         status_code=422,
         content={

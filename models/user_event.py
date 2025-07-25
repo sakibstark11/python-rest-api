@@ -1,5 +1,8 @@
-from sqlalchemy import Column, DateTime, ForeignKey, Index, Integer, String
-from sqlalchemy.orm import relationship
+from datetime import datetime
+from typing import Optional
+
+from sqlalchemy import DateTime, ForeignKey, Index, Integer, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
 from core.database import Base
@@ -8,12 +11,17 @@ from core.database import Base
 class UserEvent(Base):
     __tablename__ = "user_events"
 
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    event_id = Column(Integer, ForeignKey("events.id"), nullable=False)
-    status = Column(String, default="invited")  # invited, accepted, declined
-    invited_at = Column(DateTime(timezone=True), server_default=func.now())
-    responded_at = Column(DateTime(timezone=True))
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id"), nullable=False)
+    event_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("events.id"), nullable=False)
+    status: Mapped[str] = mapped_column(
+        String, default="invited")
+    invited_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=func.now)
+    responded_at: Mapped[Optional[datetime]
+                         ] = mapped_column(DateTime(timezone=True))
 
     user = relationship("User", back_populates="event_participants")
     event = relationship("Event", back_populates="participants")

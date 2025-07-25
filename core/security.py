@@ -1,5 +1,5 @@
-from datetime import datetime, timedelta
-from typing import Optional
+from datetime import datetime, timedelta, timezone
+from typing import Any
 
 from fastapi import Depends, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -15,53 +15,57 @@ from schemas.auth import TokenData
 security = HTTPBearer()
 
 
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
-    to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.utcnow() + expires_delta
-    else:
-        expire = datetime.utcnow() + timedelta(minutes=settings.access_token_expire_minutes)
-    to_encode.update({"exp": expire, "type": "access"})
-    encoded_jwt = jwt.encode(to_encode, settings.secret_key, algorithm=settings.algorithm)
-    return encoded_jwt
+def create_access_token(data: dict[str, Any]):
+    expire = datetime.now(timezone.utc) + \
+        timedelta(minutes=settings.access_token_expire_minutes)
+    return jwt.encode({
+        **data,
+        "exp": expire,
+        "type": "access"},
+        settings.secret_key,
+        algorithm=settings.algorithm)
 
 
-def create_refresh_token(data: dict):
-    to_encode = data.copy()
-    expire = datetime.utcnow() + timedelta(days=settings.refresh_token_expire_days)
-    to_encode.update({"exp": expire, "type": "refresh"})
-    encoded_jwt = jwt.encode(to_encode, settings.secret_key, algorithm=settings.algorithm)
-    return encoded_jwt
+def create_refresh_token(data: dict[str, Any]):
+    expire = datetime.now(timezone.utc) + \
+        timedelta(days=settings.refresh_token_expire_days)
+    return jwt.encode({
+        **data,
+        "exp": expire,
+        "type": "refresh"},
+        settings.secret_key,
+        algorithm=settings.algorithm)
 
 
 def verify_token(token: str, token_type: str = "access") -> TokenData:
     try:
-        payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
-        user_id: int = payload.get("sub")
-        token_type_from_payload: str = payload.get("type")
-        
+        payload = jwt.decode(token, settings.secret_key,
+                             algorithms=[settings.algorithm])
+        user_id = payload.get("sub")
+
         if user_id is None:
             raise CustomHTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 error_code=ErrorCode.TOKEN_INVALID,
                 detail="Invalid token"
             )
-        
+
+        token_type_from_payload = payload.get("type")
         if token_type_from_payload != token_type:
             raise CustomHTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 error_code=ErrorCode.TOKEN_INVALID,
                 detail=f"Invalid token type. Expected {token_type}"
             )
-            
+
         token_data = TokenData(user_id=user_id)
         return token_data
-    except JWTError:
+    except JWTError as exc:
         raise CustomHTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             error_code=ErrorCode.TOKEN_INVALID,
             detail="Could not validate credentials"
-        )
+        ) from exc
 
 
 async def get_current_user(
@@ -70,7 +74,7 @@ async def get_current_user(
 ):
     token = credentials.credentials
     token_data = verify_token(token)
-    
+
     user = await get_user_by_id(db, user_id=token_data.user_id)
     if user is None:
         raise CustomHTTPException(
@@ -78,14 +82,12 @@ async def get_current_user(
             error_code=ErrorCode.AUTHENTICATION_ERROR,
             detail="User not found"
         )
-    
+
     if not user.is_active:
         raise CustomHTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             error_code=ErrorCode.AUTHENTICATION_ERROR,
             detail="Inactive user"
         )
-    
-    return user    
-    return user    
+
     return user

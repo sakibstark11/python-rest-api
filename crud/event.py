@@ -1,5 +1,5 @@
-from datetime import datetime
-from typing import List, Optional
+import datetime
+from typing import Optional, Sequence
 
 from sqlalchemy import and_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -39,9 +39,9 @@ async def get_user_events(
     user_id: int,
     skip: int = 0,
     limit: int = 100,
-    start_date: Optional[datetime] = None,
-    end_date: Optional[datetime] = None,
-) -> List[Event]:
+    start_date: Optional[datetime.datetime] = None,
+    end_date: Optional[datetime.datetime] = None,
+) -> Sequence[Event]:
     query = (
         select(Event)
         .options(selectinload(Event.participants).selectinload(UserEvent.user))
@@ -73,7 +73,7 @@ async def update_event(
     if not db_event:
         return None
 
-    update_data = event_update.dict(exclude_unset=True)
+    update_data = event_update.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         setattr(db_event, field, value)
 
@@ -97,7 +97,8 @@ async def delete_event(db: AsyncSession, event_id: int) -> bool:
 async def add_event_participant(
     db: AsyncSession, event_id: int, user_id: int
 ) -> UserEvent:
-    db_user_event = UserEvent(user_id=user_id, event_id=event_id, status="invited")
+    db_user_event = UserEvent(
+        user_id=user_id, event_id=event_id, status="invited")
     db.add(db_user_event)
     await db.commit()
     await db.refresh(db_user_event)
@@ -118,7 +119,7 @@ async def update_event_participation(
         return None
 
     db_user_event.status = status
-    db_user_event.responded_at = datetime.utcnow()
+    db_user_event.responded_at = datetime.datetime.now(datetime.timezone.utc)
 
     await db.commit()
     await db.refresh(db_user_event)

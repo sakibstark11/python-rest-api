@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List, Optional
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator, model_validator
 
 
 class EventBase(BaseModel):
@@ -11,23 +11,25 @@ class EventBase(BaseModel):
     end_time: datetime
     location: Optional[str] = None
 
+    @model_validator(mode='after')
+    def validate_event_times(self):
+        if hasattr(self, 'start_time') and hasattr(self, 'end_time'):
+            if self.start_time and self.end_time and self.end_time <= self.start_time:
+                raise ValueError('End time must be after start time')
+        return self
 
-class EventCreate(EventBase):
-    participant_emails: Optional[List[str]] = []
-    
-    @validator('end_time')
-    def validate_end_time(cls, v, values):
-        if 'start_time' in values and v <= values['start_time']:
-            raise ValueError('End time must be after start time')
-        return v
-    
-    @validator('title')
-    def validate_title(cls, v):
-        if len(v.strip()) == 0:
+    @field_validator('title')
+    @classmethod
+    def validate_title(cls, v: Optional[str]):
+        if not v or len(v.strip()) == 0:
             raise ValueError('Title cannot be empty')
         if len(v) > 200:
             raise ValueError('Title cannot exceed 200 characters')
         return v.strip()
+
+
+class EventCreate(EventBase):
+    participant_emails: Optional[List[str]] = []
 
 
 class EventUpdate(BaseModel):
@@ -36,15 +38,6 @@ class EventUpdate(BaseModel):
     start_time: Optional[datetime] = None
     end_time: Optional[datetime] = None
     location: Optional[str] = None
-    
-    @validator('title')
-    def validate_title(cls, v):
-        if v is not None:
-            if len(v.strip()) == 0:
-                raise ValueError('Title cannot be empty')
-            if len(v) > 200:
-                raise ValueError('Title cannot exceed 200 characters')
-        return v.strip() if v else v
 
 
 class ParticipantResponse(BaseModel):
@@ -56,7 +49,7 @@ class ParticipantResponse(BaseModel):
     status: str
     invited_at: datetime
     responded_at: Optional[datetime] = None
-    
+
     class Config:
         from_attributes = True
 
@@ -67,7 +60,7 @@ class EventResponse(EventBase):
     created_at: datetime
     updated_at: Optional[datetime] = None
     participants: List[ParticipantResponse] = []
-    
+
     class Config:
         from_attributes = True
 
@@ -75,9 +68,10 @@ class EventResponse(EventBase):
 class EventInviteResponse(BaseModel):
     event_id: int
     status: str
-    
-    @validator('status')
-    def validate_status(cls, v):
+
+    @field_validator('status')
+    @classmethod
+    def validate_status(cls, v: Optional[str]):
         if v not in ['accepted', 'declined']:
             raise ValueError('Status must be either "accepted" or "declined"')
         return v

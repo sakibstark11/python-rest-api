@@ -54,7 +54,7 @@ async def login(user_credentials: UserLogin, db: AsyncSession = Depends(get_db))
 
 
 @router.post("/refresh", response_model=Token)
-async def refresh_token(
+async def token_refresh(
     refresh_request: RefreshTokenRequest,
     db: AsyncSession = Depends(get_db)
 ):

@@ -4,7 +4,6 @@
   "service": "api",
   "workspaceFolder": "/app",
   "shutdownAction": "stopCompose",
-  
   "customizations": {
     "vscode": {
       "extensions": [
@@ -33,8 +32,10 @@
       }
     }
   },
-
-  "forwardPorts": [8000, 5432],
+  "forwardPorts": [
+    8000,
+    5432
+  ],
   "portsAttributes": {
     "8000": {
       "label": "FastAPI Server",
@@ -45,16 +46,16 @@
       "onAutoForward": "silent"
     }
   },
-
-  "postCreateCommand": "pip install -e .[dev]",
+  "postCreateCommand": {
+    "pip": "pip install -e .[dev]",
+    "apt": "apt update -y && apt install -y openssh-client"
+  },
   "postStartCommand": "python create_tables.py",
-
   "remoteUser": "root",
   "features": {
     "ghcr.io/devcontainers/features/git:1": {},
     "ghcr.io/devcontainers/features/github-cli:1": {}
   },
-
   "containerEnv": {
     "ENVIRONMENT": "development",
     "INSTALL_EXTRAS": ".[dev]",

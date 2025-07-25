@@ -1,6 +1,9 @@
-from sqlalchemy import (Column, DateTime, ForeignKey, Index, Integer, String,
+from datetime import datetime
+from typing import Optional
+
+from sqlalchemy import (DateTime, ForeignKey, Index, Integer, String,
                         Text)
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
 from core.database import Base
@@ -9,15 +12,20 @@ from core.database import Base
 class Event(Base):
     __tablename__ = "events"
 
-    id = Column(Integer, primary_key=True, index=True)
-    title = Column(String, nullable=False, index=True)
-    description = Column(Text)
-    start_time = Column(DateTime(timezone=True), nullable=False)
-    end_time = Column(DateTime(timezone=True), nullable=False)
-    location = Column(String)
-    creator_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    created_at = Column(DateTime(timezone=True), default=func.now)
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    title: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    description: Mapped[Optional[str]] = mapped_column(Text)
+    start_time: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False)
+    end_time: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False)
+    location: Mapped[Optional[str]] = mapped_column(String)
+    creator_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id"), nullable=False)
+    created_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), default=func.now)
+    updated_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), onupdate=func.now)
 
     creator = relationship("User", back_populates="events")
     participants = relationship(

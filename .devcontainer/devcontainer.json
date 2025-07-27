@@ -47,10 +47,10 @@
     }
   },
   "postCreateCommand": {
-    "pip": "pip install -e .[dev]",
+    "pip": "cd backend && pip install -e .[dev]",
     "apt": "apt update -y && apt install -y openssh-client"
   },
-  "postStartCommand": "python create_tables.py",
+  "postStartCommand": "cd backend && python create_tables.py",
   "remoteUser": "root",
   "features": {
     "ghcr.io/devcontainers/features/git:1": {},

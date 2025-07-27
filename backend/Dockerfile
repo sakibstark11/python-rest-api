@@ -1,7 +1,5 @@
 FROM python:3.13-slim
 
-WORKDIR /app
-
 ENV INSTALL_EXTRAS=.[dev]
 ENV PORT=8000
 ENV RELOAD=--reload

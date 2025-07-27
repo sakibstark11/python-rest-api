@@ -41,7 +41,7 @@ class EventUpdate(BaseModel):
 
 
 class ParticipantResponse(BaseModel):
-    id: int
+    id: str
     email: str
     username: str
     first_name: str
@@ -55,8 +55,8 @@ class ParticipantResponse(BaseModel):
 
 
 class EventResponse(EventBase):
-    id: int
-    creator_id: int
+    id: str
+    creator_id: str
     created_at: datetime
     updated_at: Optional[datetime] = None
     participants: List[ParticipantResponse] = []
@@ -66,7 +66,7 @@ class EventResponse(EventBase):
 
 
 class EventInviteResponse(BaseModel):
-    event_id: int
+    event_id: str
     status: str
 
     @field_validator('status')

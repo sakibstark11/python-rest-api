@@ -53,7 +53,7 @@ class UserLogin(BaseModel):
 
 
 class UserResponse(UserBase):
-    id: int
+    id: str
     is_active: bool
     created_at: datetime
     updated_at: Optional[datetime] = None

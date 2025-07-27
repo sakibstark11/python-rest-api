@@ -10,7 +10,7 @@ from models.user_event import UserEvent
 from schemas.event import EventCreate, EventUpdate
 
 
-async def create_event(db: AsyncSession, event: EventCreate, creator_id: int) -> Event:
+async def create_event(db: AsyncSession, event: EventCreate, creator_id: str) -> Event:
     db_event = Event(
         title=event.title,
         description=event.description,
@@ -25,7 +25,7 @@ async def create_event(db: AsyncSession, event: EventCreate, creator_id: int) ->
     return db_event
 
 
-async def get_event_by_id(db: AsyncSession, event_id: int) -> Optional[Event]:
+async def get_event_by_id(db: AsyncSession, event_id: str) -> Optional[Event]:
     result = await db.execute(
         select(Event)
         .options(selectinload(Event.participants).selectinload(UserEvent.user))
@@ -36,7 +36,7 @@ async def get_event_by_id(db: AsyncSession, event_id: int) -> Optional[Event]:
 
 async def get_user_events(
     db: AsyncSession,
-    user_id: int,
+    user_id: str,
     skip: int = 0,
     limit: int = 100,
     start_date: Optional[datetime.datetime] = None,
@@ -65,7 +65,7 @@ async def get_user_events(
 
 
 async def update_event(
-    db: AsyncSession, event_id: int, event_update: EventUpdate
+    db: AsyncSession, event_id: str, event_update: EventUpdate
 ) -> Optional[Event]:
     result = await db.execute(select(Event).where(Event.id == event_id))
     db_event = result.scalar_one_or_none()
@@ -82,7 +82,7 @@ async def update_event(
     return db_event
 
 
-async def delete_event(db: AsyncSession, event_id: int) -> bool:
+async def delete_event(db: AsyncSession, event_id: str) -> bool:
     result = await db.execute(select(Event).where(Event.id == event_id))
     db_event = result.scalar_one_or_none()
 
@@ -95,7 +95,7 @@ async def delete_event(db: AsyncSession, event_id: int) -> bool:
 
 
 async def add_event_participant(
-    db: AsyncSession, event_id: int, user_id: int
+    db: AsyncSession, event_id: str, user_id: str
 ) -> UserEvent:
     db_user_event = UserEvent(
         user_id=user_id, event_id=event_id, status="invited")
@@ -106,7 +106,7 @@ async def add_event_participant(
 
 
 async def update_event_participation(
-    db: AsyncSession, event_id: int, user_id: int, status: str
+    db: AsyncSession, event_id: str, user_id: str, status: str
 ) -> Optional[UserEvent]:
     result = await db.execute(
         select(UserEvent).where(
@@ -127,7 +127,7 @@ async def update_event_participation(
 
 
 async def get_user_participation(
-    db: AsyncSession, event_id: int, user_id: int
+    db: AsyncSession, event_id: str, user_id: str
 ) -> Optional[UserEvent]:
     result = await db.execute(
         select(UserEvent).where(

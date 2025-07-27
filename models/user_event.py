@@ -1,25 +1,25 @@
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import DateTime, ForeignKey, Index, Integer, String
+from sqlalchemy import DateTime, ForeignKey, Index, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.sql import func
 
 from core.database import Base
+from core.utils import generate_ulid, utc_now
 
 
 class UserEvent(Base):
     __tablename__ = "user_events"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    user_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("users.id"), nullable=False)
-    event_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("events.id"), nullable=False)
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=generate_ulid, index=True)
+    user_id: Mapped[str] = mapped_column(
+        String, ForeignKey("users.id"), nullable=False)
+    event_id: Mapped[str] = mapped_column(
+        String, ForeignKey("events.id"), nullable=False)
     status: Mapped[str] = mapped_column(
         String, default="invited")
     invited_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=func.now)
+        DateTime(timezone=True), default=utc_now)
     responded_at: Mapped[Optional[datetime]
                          ] = mapped_column(DateTime(timezone=True))
 

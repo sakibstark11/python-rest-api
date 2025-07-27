@@ -13,6 +13,7 @@ install_requires = [
     "python-dotenv==1.0.1",
     "asyncpg==0.30.0",
     "greenlet==3.1.1",
+    "python-ulid==2.7.0",
 ]
 
 dev_requires = [

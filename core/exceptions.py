@@ -1,8 +1,9 @@
 from enum import Enum
 from typing import Any, Dict, Optional
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
+from pydantic import ValidationError
 
 
 class ErrorCode(str, Enum):
@@ -33,14 +34,13 @@ class CustomHTTPException(HTTPException):
         self.error_code = error_code
 
 
-async def custom_http_exception_handler(_, exc: CustomHTTPException):
+async def custom_http_exception_handler(_: Request, exc: CustomHTTPException):
     return JSONResponse(
         status_code=exc.status_code,
         content={
             "error": {
                 "code": exc.error_code.value,
                 "message": exc.detail,
-                "status_code": exc.status_code
             }
         }
     )
@@ -53,21 +53,31 @@ async def generic_http_exception_handler(_, exc: HTTPException):
             "error": {
                 "code": "HTTP_ERROR",
                 "message": exc.detail,
-                "status_code": exc.status_code
             }
         }
     )
 
 
-async def validation_exception_handler(_, exc: Exception):
+async def validation_exception_handler(_, exc: ValidationError):
     return JSONResponse(
         status_code=422,
         content={
             "error": {
                 "code": ErrorCode.VALIDATION_ERROR.value,
                 "message": "Validation error",
-                "details": str(exc),
-                "status_code": 422
+                "details": exc.errors(),
+            }
+        }
+    )
+
+
+async def internal_error_handler():
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": {
+                "code": ErrorCode.INTERNAL_ERROR.value,
+                "message": "An internal server error occurred",
             }
         }
     )
@@ -77,4 +87,5 @@ def setup_exception_handlers(app: FastAPI):
     app.add_exception_handler(
         CustomHTTPException, custom_http_exception_handler)
     app.add_exception_handler(HTTPException, generic_http_exception_handler)
-    app.add_exception_handler(Exception, validation_exception_handler)
+    app.add_exception_handler(ValidationError, validation_exception_handler)
+    app.add_exception_handler(Exception, internal_error_handler)

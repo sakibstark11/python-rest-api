@@ -10,7 +10,7 @@ class Token(BaseModel):
 
 
 class TokenData(BaseModel):
-    user_id: int
+    user_id: str
 
 
 class RefreshTokenRequest(BaseModel):
@@ -18,6 +18,6 @@ class RefreshTokenRequest(BaseModel):
 
 
 class TokenPayload(BaseModel):
-    sub: Optional[int]
+    sub: Optional[str]
     exp: Optional[int]
     type: Optional[str] = "access"

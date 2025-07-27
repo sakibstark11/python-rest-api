@@ -58,7 +58,7 @@ async def get_events(
 
 @router.get("/{event_id}", response_model=EventResponse)
 async def get_event(
-    event_id: int,
+    event_id: str,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
@@ -83,7 +83,7 @@ async def get_event(
 
 @router.put("/{event_id}", response_model=EventResponse)
 async def update_existing_event(
-    event_id: int,
+    event_id: str,
     event_update: EventUpdate,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
@@ -109,7 +109,7 @@ async def update_existing_event(
 
 @router.delete("/{event_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_existing_event(
-    event_id: int,
+    event_id: str,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
@@ -133,7 +133,7 @@ async def delete_existing_event(
 
 @router.post("/{event_id}/invite", status_code=status.HTTP_201_CREATED)
 async def invite_to_event(
-    event_id: int,
+    event_id: str,
     participant_email: str,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
@@ -175,7 +175,7 @@ async def invite_to_event(
 
 @router.post("/{event_id}/respond")
 async def respond_to_event_invitation(
-    event_id: int,
+    event_id: str,
     response: EventInviteResponse,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)

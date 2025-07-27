@@ -11,7 +11,8 @@ from core.utils import generate_ulid, utc_now
 class UserEvent(Base):
     __tablename__ = "user_events"
 
-    id: Mapped[str] = mapped_column(String, primary_key=True, default=generate_ulid, index=True)
+    id: Mapped[str] = mapped_column(
+        String, primary_key=True, default=generate_ulid, index=True)
     user_id: Mapped[str] = mapped_column(
         String, ForeignKey("users.id"), nullable=False)
     event_id: Mapped[str] = mapped_column(

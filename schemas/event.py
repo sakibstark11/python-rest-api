@@ -40,12 +40,19 @@ class EventUpdate(BaseModel):
     location: Optional[str] = None
 
 
-class ParticipantResponse(BaseModel):
+class UserInfo(BaseModel):
     id: str
     email: str
     username: str
     first_name: str
     last_name: str
+
+    class Config:
+        from_attributes = True
+
+
+class ParticipantResponse(BaseModel):
+    user: UserInfo
     status: str
     invited_at: datetime
     responded_at: Optional[datetime] = None
@@ -66,7 +73,6 @@ class EventResponse(EventBase):
 
 
 class EventInviteResponse(BaseModel):
-    event_id: str
     status: str
 
     @field_validator('status')

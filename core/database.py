@@ -4,7 +4,16 @@ from sqlalchemy.orm import declarative_base
 
 from core.config import settings
 
-engine = create_async_engine(settings.database_url, echo=True)
+
+engine = create_async_engine(
+    settings.database_url,
+    echo=False,
+    connect_args={
+        "server_settings": {
+            "timezone": "UTC"
+        }
+    }
+)
 AsyncSessionLocal = async_sessionmaker(
     engine,
     class_=AsyncSession,

@@ -71,7 +71,7 @@ async def validation_exception_handler(_, exc: ValidationError):
     )
 
 
-async def internal_error_handler():
+async def internal_error_handler(_, exc: Exception):
     return JSONResponse(
         status_code=500,
         content={

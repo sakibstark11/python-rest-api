@@ -32,7 +32,6 @@ async def create_new_event(
             participant = await get_user_by_email(db, email=email)
             if participant and participant.id != current_user.id:
                 await add_event_participant(db, event_id=db_event.id, user_id=participant.id)
-
     return await get_event_by_id(db, event_id=db_event.id)
 
 

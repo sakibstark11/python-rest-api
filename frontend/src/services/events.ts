@@ -4,8 +4,12 @@ import { AuthService } from './auth';
 const api = AuthService.getApi();
 
 export class EventService {
-  static async getEvents(): Promise<Event[]> {
-    const response = await api.get('/events/');
+  static async getEvents(startDate?: string, endDate?: string): Promise<Event[]> {
+    const params = new URLSearchParams();
+    if (startDate) params.append('start_date', startDate);
+    if (endDate) params.append('end_date', endDate);
+
+    const response = await api.get(`/events/?start_date=${startDate}&end_date=${endDate}`);
     return response.data;
   }
 

@@ -8,11 +8,12 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '../context/AppContext';
 import { AuthService } from '../services/auth';
+import { tokenManager } from '../services/tokenManager';
 import type { LoginCredentials } from '../types';
-import { useNavigate } from 'react-router-dom';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -20,9 +21,7 @@ export default function LoginPage() {
     email: '',
     password: '',
   });
-  const [, setAppState] = useAppStore((state) => state);
-  const [user] = useAppStore((state) => state.user);
-  const [accessToken] = useAppStore((state) => state.accessToken);
+  const [{ user, accessToken }, setAppState] = useAppStore((state) => state);
 
   useEffect(() => {
     if (user && accessToken && AuthService.isTokenValid(accessToken)) {
@@ -30,7 +29,7 @@ export default function LoginPage() {
     } else if (accessToken && !AuthService.isTokenValid(accessToken)) {
       setAppState({ user: null, accessToken: null });
     }
-  }, [user, accessToken, navigate, setAppState]);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,6 +40,7 @@ export default function LoginPage() {
       const authResponse = await AuthService.login(credentials);
       const user = await AuthService.getCurrentUser(authResponse.access_token);
 
+      tokenManager.setToken(authResponse.access_token);
       setAppState({
         user,
         accessToken: authResponse.access_token,

@@ -1,16 +1,20 @@
 import axios from 'axios';
 import type { AuthResponse, LoginCredentials, SignupData, User } from '../types';
+import { tokenManager } from './tokenManager';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true, // Include cookies in requests
+  withCredentials: true,
 });
 
-
 api.interceptors.request.use((config) => {
+  const token = tokenManager.getToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
   return config;
 });
 

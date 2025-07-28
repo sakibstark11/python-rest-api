@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     refresh_token_expire_days: int = 7
     api_port: int = 8000
     db_port: int = 5432
+    environment: str = "development"
 
     class Config:
         env_file = ".env"

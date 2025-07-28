@@ -1,10 +1,22 @@
-import { Box, Typography } from '@mui/material';
-import { useEffect } from 'react';
+import { Add } from '@mui/icons-material';
+import {
+  Box,
+  Card,
+  CardContent,
+  Chip,
+  Fab,
+  Grid,
+  Typography
+} from '@mui/material';
+import { useEffect, useState } from 'react';
 import { useAppStore } from '../context/AppContext';
 import { EventService } from '../services/events';
+import type { Event } from '../types';
+import CreateEventModal from './CreateEventModal';
 
 export default function WeeklyEvents() {
   const [{ events }, setAppState] = useAppStore((state) => state);
+  const [modalOpen, setModalOpen] = useState(false);
 
   const getWeekStart = () => {
     const now = new Date();
@@ -27,6 +39,26 @@ export default function WeeklyEvents() {
   const startDate = getWeekStart();
   const endDate = getWeekEnd();
 
+  // Generate array of 7 days for the current week
+  const getWeekDays = () => {
+    const monday = getWeekStart();
+    return Array.from({ length: 7 }, (_, i) => {
+      const day = new Date(monday);
+      day.setUTCDate(monday.getUTCDate() + i);
+      return day;
+    });
+  };
+
+  // Get events for a specific date
+  const getEventsForDate = (date: Date): Event[] => {
+    return events.filter(event => {
+      const eventDate = new Date(event.start_time);
+      return eventDate.toDateString() === date.toDateString();
+    });
+  };
+
+  const weekDays = getWeekDays();
+
   useEffect(() => {
     const fetchEvents = async () => {
       try {
@@ -35,7 +67,6 @@ export default function WeeklyEvents() {
           endDate.toISOString()
         );
 
-        console.log('Fetched events:', weekEvents);
         setAppState({ events: weekEvents });
 
       } catch (error) {
@@ -54,25 +85,84 @@ export default function WeeklyEvents() {
         This Week's Events ({getWeekStart().toLocaleDateString()} - {getWeekEnd().toLocaleDateString()})
       </Typography>
 
-      {events.length === 0 ? (
-        <Typography color="text.secondary">
-          No events this week.
-        </Typography>
-      ) : (
-        <Box>
-          {events.map((event) => (
-            <Box key={event.id} p={2} border={1} borderColor="grey.300" borderRadius={1} mb={2}>
-              <Typography variant="h6">{event.title}</Typography>
-              <Typography variant="body2">
-                {new Date(event.start_time).toLocaleString()} - {new Date(event.end_time).toLocaleString()}
-              </Typography>
-              {event.description && (
-                <Typography variant="body2">{event.description}</Typography>
-              )}
-            </Box>
-          ))}
-        </Box>
-      )}
+      <Grid container spacing={2}>
+        {weekDays.map((day, index) => {
+          const dayEvents = getEventsForDate(day);
+          const isToday = day.toDateString() === new Date().toDateString();
+
+          return (
+            <Grid size={{
+              xs: 12,
+              sm: 6,
+              md: 4,
+              lg: 3
+
+            }} key={day.toISOString()}>
+              <Card
+                sx={{
+                  minHeight: 200,
+                  bgcolor: isToday ? 'primary.light' : 'background.paper',
+                  border: isToday ? 2 : 1,
+                  borderColor: isToday ? 'primary.main' : 'divider'
+                }}
+              >
+                <CardContent>
+                  <Typography variant="h6" gutterBottom>
+                    {day.toLocaleDateString('en-US', { weekday: 'short' })}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" gutterBottom>
+                    {day.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    {isToday && ' (Today)'}
+                  </Typography>
+
+                  <Box mt={2}>
+                    {dayEvents.length === 0 ? (
+                      <Typography variant="body2" color="text.secondary" fontStyle="italic">
+                        No events
+                      </Typography>
+                    ) : (
+                      dayEvents.map((event) => (
+                        <Chip
+                          key={event.id}
+                          label={event.title}
+                          size="small"
+                          sx={{
+                            mb: 1,
+                            mr: 1,
+                            display: 'block',
+                            width: 'fit-content'
+                          }}
+                          color="primary"
+                        />
+                      ))
+                    )}
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
+          );
+        })}
+      </Grid>
+
+      {/* Floating Action Button */}
+      <Fab
+        color="primary"
+        aria-label="add event"
+        sx={{
+          position: 'fixed',
+          bottom: 16,
+          right: 16,
+        }}
+        onClick={() => setModalOpen(true)}
+      >
+        <Add />
+      </Fab>
+
+      {/* Create Event Modal */}
+      <CreateEventModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+      />
     </Box>
   );
 }

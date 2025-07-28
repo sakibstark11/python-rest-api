@@ -81,84 +81,85 @@ export default function WeeklyEvents() {
 
   return (
     <Box>
-      <Typography variant="h5" gutterBottom>
-        This Week's Events ({getWeekStart().toLocaleDateString()} - {getWeekEnd().toLocaleDateString()})
+      <Typography variant="h4" component="h1" align="center" gutterBottom>
+        This Week's Events
+      </Typography>
+      <Typography variant="subtitle1" align="center" color="text.secondary" gutterBottom sx={{ mb: 4 }}>
+        {getWeekStart().toLocaleDateString()} - {getWeekEnd().toLocaleDateString()}
       </Typography>
 
-      <Grid container spacing={2}>
-        {weekDays.map((day, index) => {
-          const dayEvents = getEventsForDate(day);
-          const isToday = day.toDateString() === new Date().toDateString();
+        <Grid container spacing={2}>
+          {weekDays.map((day) => {
+            const dayEvents = getEventsForDate(day);
+            const isToday = day.toDateString() === new Date().toDateString();
 
-          return (
-            <Grid size={{
-              xs: 12,
-              sm: 6,
-              md: 4,
-              lg: 3
+            return (
+              <Grid size={{
+                xs: 12,
+                sm: 6,
+                md: 4,
+                lg: 3
 
-            }} key={day.toISOString()}>
-              <Card
-                sx={{
-                  minHeight: 200,
-                  bgcolor: isToday ? 'primary.light' : 'background.paper',
-                  border: isToday ? 2 : 1,
-                  borderColor: isToday ? 'primary.main' : 'divider'
-                }}
-              >
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>
-                    {day.toLocaleDateString('en-US', { weekday: 'short' })}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" gutterBottom>
-                    {day.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                    {isToday && ' (Today)'}
-                  </Typography>
+              }} key={day.toISOString()}>
+                <Card
+                  sx={{
+                    minHeight: 200,
+                    bgcolor: isToday ? 'primary.dark' : 'background.paper',
+                    border: isToday ? 2 : 1,
+                    borderColor: isToday ? 'primary.main' : 'divider'
+                  }}
+                >
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom>
+                      {day.toLocaleDateString('en-US', { weekday: 'short' })}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" gutterBottom>
+                      {day.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      {isToday && ' (Today)'}
+                    </Typography>
 
-                  <Box mt={2}>
-                    {dayEvents.length === 0 ? (
-                      <Typography variant="body2" color="text.secondary" fontStyle="italic">
-                        No events
-                      </Typography>
-                    ) : (
-                      dayEvents.map((event) => (
-                        <Chip
-                          key={event.id}
-                          label={event.title}
-                          size="small"
-                          sx={{
-                            mb: 1,
-                            mr: 1,
-                            display: 'block',
-                            width: 'fit-content'
-                          }}
-                          color="primary"
-                        />
-                      ))
-                    )}
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-          );
-        })}
-      </Grid>
+                    <Box mt={2}>
+                      {dayEvents.length === 0 ? (
+                        <Typography variant="body2" color="text.secondary" fontStyle="italic">
+                          No events
+                        </Typography>
+                      ) : (
+                        dayEvents.map((event) => (
+                          <Chip
+                            key={event.id}
+                            label={event.title}
+                            size="small"
+                            sx={{
+                              mb: 1,
+                              mr: 1,
+                              display: 'block',
+                              width: 'fit-content'
+                            }}
+                            color="primary"
+                          />
+                        ))
+                      )}
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+            );
+          })}
+        </Grid>
 
-      {/* Floating Action Button */}
-      <Fab
-        color="primary"
-        aria-label="add event"
-        sx={{
-          position: 'fixed',
-          bottom: 16,
-          right: 16,
-        }}
-        onClick={() => setModalOpen(true)}
-      >
-        <Add />
-      </Fab>
+        <Fab
+          color="primary"
+          aria-label="add event"
+          sx={{
+            position: 'fixed',
+            bottom: 16,
+            right: 16,
+          }}
+          onClick={() => setModalOpen(true)}
+        >
+          <Add />
+        </Fab>
 
-      {/* Create Event Modal */}
       <CreateEventModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}

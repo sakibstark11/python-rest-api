@@ -3,10 +3,8 @@ import {
   Box,
   Button,
   CircularProgress,
-  Container,
-  Paper,
   TextField,
-  Typography,
+  Typography
 } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -65,59 +63,50 @@ export default function LoginPage() {
   const [error] = useAppStore((state) => state.error);
 
   return (
-    <Container maxWidth="sm">
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="100vh"
-      >
-        <Paper sx={{ p: 4, width: '100%' }}>
-          <Typography variant="h4" component="h1" gutterBottom align="center">
-            Login
-          </Typography>
+    <>
+      <Typography variant="h4" component="h1" gutterBottom align="center">
+        Login
+      </Typography>
 
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
-            </Alert>
-          )}
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
 
-          <Box component="form" onSubmit={handleSubmit}>
-            <TextField
-              fullWidth
-              label="Email"
-              type="email"
-              value={credentials.email}
-              onChange={handleChange('email')}
-              margin="normal"
-              required
-              disabled={loading}
-            />
+      <Box component="form" onSubmit={handleSubmit}>
+        <TextField
+          fullWidth
+          label="Email"
+          type="email"
+          value={credentials.email}
+          onChange={handleChange('email')}
+          margin="normal"
+          required
+          disabled={loading}
+        />
 
-            <TextField
-              fullWidth
-              label="Password"
-              type="password"
-              value={credentials.password}
-              onChange={handleChange('password')}
-              margin="normal"
-              required
-              disabled={loading}
-            />
+        <TextField
+          fullWidth
+          label="Password"
+          type="password"
+          value={credentials.password}
+          onChange={handleChange('password')}
+          margin="normal"
+          required
+          disabled={loading}
+        />
 
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              sx={{ mt: 3, mb: 2 }}
-              disabled={loading}
-            >
-              {loading ? <CircularProgress size={24} /> : 'Login'}
-            </Button>
-          </Box>
-        </Paper>
+        <Button
+          type="submit"
+          fullWidth
+          variant="contained"
+          sx={{ mt: 3, mb: 2 }}
+          disabled={loading}
+        >
+          {loading ? <CircularProgress size={24} /> : 'Login'}
+        </Button>
       </Box>
-    </Container>
+    </>
   );
 }

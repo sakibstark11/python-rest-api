@@ -1,13 +1,13 @@
-import { useState } from 'react';
+import { Close } from '@mui/icons-material';
 import {
-  Modal,
   Box,
-  Typography,
-  TextField,
   Button,
   IconButton,
+  Modal,
+  TextField,
+  Typography,
 } from '@mui/material';
-import { Close } from '@mui/icons-material';
+import { useState } from 'react';
 import { useAppStore } from '../context/AppContext';
 import { EventService } from '../services/events';
 import type { EventCreate } from '../types';
@@ -16,18 +16,6 @@ interface CreateEventModalProps {
   open: boolean;
   onClose: () => void;
 }
-
-const modalStyle = {
-  position: 'absolute' as const,
-  top: '50%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
-  width: 400,
-  bgcolor: 'background.paper',
-  borderRadius: 2,
-  boxShadow: 24,
-  p: 4,
-};
 
 export default function CreateEventModal({ open, onClose }: CreateEventModalProps) {
   const [, setAppState] = useAppStore((state) => state);
@@ -53,7 +41,7 @@ export default function CreateEventModal({ open, onClose }: CreateEventModalProp
 
     try {
       await EventService.createEvent(formData);
-      
+
       // Refresh events list
       const now = new Date();
       const dayOfWeek = now.getUTCDay();
@@ -61,7 +49,7 @@ export default function CreateEventModal({ open, onClose }: CreateEventModalProp
       const monday = new Date(now);
       monday.setUTCDate(diff);
       monday.setUTCHours(0, 0, 0, 0);
-      
+
       const sunday = new Date(monday);
       sunday.setUTCDate(monday.getUTCDate() + 6);
       sunday.setUTCHours(23, 59, 59, 999);
@@ -70,9 +58,9 @@ export default function CreateEventModal({ open, onClose }: CreateEventModalProp
         monday.toISOString(),
         sunday.toISOString()
       );
-      
+
       setAppState({ events: updatedEvents });
-      
+
       // Reset form and close modal
       setFormData({
         title: '',
@@ -92,7 +80,19 @@ export default function CreateEventModal({ open, onClose }: CreateEventModalProp
 
   return (
     <Modal open={open} onClose={onClose}>
-      <Box sx={modalStyle}>
+      <Box
+        sx={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: { xs: '90%', sm: 400 },
+          bgcolor: 'background.paper',
+          boxShadow: 24,
+          p: 4,
+          borderRadius: 2,
+        }}
+      >
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
           <Typography variant="h6">Create New Event</Typography>
           <IconButton onClick={onClose}>

@@ -1,51 +1,18 @@
-import type { ReactNode} from 'react';
-import { useEffect } from 'react';
+import React from 'react';
 import { Navigate } from 'react-router-dom';
-import { AuthService } from '../services/auth';
-import { useStore } from '../hooks/useStore';
-import { Box, CircularProgress } from '@mui/material';
+import { useAppStore } from '../context/AppContext';
 
-type ProtectedRouteProps = {
-  children: ReactNode;
+interface ProtectedRouteProps {
+  children: React.ReactNode;
 }
 
-export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-  const [state, actions] = useStore();
+export default function ProtectedRoute({ children }: ProtectedRouteProps) {
+  const [user] = useAppStore((state) => state.user);
+  const [accessToken] = useAppStore((state) => state.accessToken);
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      if (!state.user && AuthService.isAuthenticated()) {
-        try {
-          actions.setLoading(true);
-          const user = await AuthService.getCurrentUser();
-          actions.setUser(user);
-        } catch {
-          AuthService.logout();
-        } finally {
-          actions.setLoading(false);
-        }
-      }
-    };
-
-    checkAuth();
-  }, [state.user, actions]);
-
-  if (state.loading) {
-    return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="100vh"
-      >
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  if (!state.user && !AuthService.isAuthenticated()) {
+  if (!user || !accessToken) {
     return <Navigate to="/login" replace />;
   }
 
   return <>{children}</>;
-};
+}

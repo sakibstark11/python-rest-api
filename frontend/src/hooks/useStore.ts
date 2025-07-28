@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { AppState, AppActions } from '../store';
+import type { AppActions, AppState } from '../store';
 import { store } from '../store';
 
 export const useStore = (): [AppState, AppActions] => {

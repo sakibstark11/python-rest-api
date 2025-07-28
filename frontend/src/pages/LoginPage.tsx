@@ -2,153 +2,122 @@ import {
   Alert,
   Box,
   Button,
+  CircularProgress,
   Container,
-  Link,
   Paper,
   TextField,
   Typography,
 } from '@mui/material';
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useStore } from '../hooks/useStore';
+import React, { useState, useEffect } from 'react';
+import { useAppStore } from '../context/AppContext';
 import { AuthService } from '../services/auth';
 import type { LoginCredentials } from '../types';
+import { useNavigate } from 'react-router-dom';
 
-export const LoginPage = () => {
-  const [state, actions] = useStore();
+export default function LoginPage() {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState<LoginCredentials>({
+  const [credentials, setCredentials] = useState<LoginCredentials>({
     email: '',
     password: '',
   });
-  const [errors, setErrors] = useState<Partial<LoginCredentials>>({});
+  const [, setAppState] = useAppStore((state) => state);
+  const [user] = useAppStore((state) => state.user);
+  const [accessToken] = useAppStore((state) => state.accessToken);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value,
-    }));
-    // Clear error when user starts typing
-    if (errors[name as keyof LoginCredentials]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: undefined,
-      }));
+  useEffect(() => {
+    if (user && accessToken && AuthService.isTokenValid(accessToken)) {
+      navigate('/');
+    } else if (accessToken && !AuthService.isTokenValid(accessToken)) {
+      setAppState({ user: null, accessToken: null });
     }
-  };
-
-  const validateForm = (): boolean => {
-    const newErrors: Partial<LoginCredentials> = {};
-
-    if (!formData.email) {
-      newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email is invalid';
-    }
-
-    if (!formData.password) {
-      newErrors.password = 'Password is required';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  }, [user, accessToken, navigate, setAppState]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!validateForm()) return;
 
-    actions.setLoading(true);
-    actions.clearError();
+    setAppState({ loading: true, error: null });
 
     try {
-      const authResponse = await AuthService.login(formData);
-      actions.setUser(authResponse.user);
+      const authResponse = await AuthService.login(credentials);
+      const user = await AuthService.getCurrentUser(authResponse.access_token);
+
+      setAppState({
+        user,
+        accessToken: authResponse.access_token,
+        loading: false,
+      });
       navigate('/');
-    } catch (error: unknown) {
-      const err = error as { response?: { data?: { error?: { message?: string } } } };
-      const errorMessage = err.response?.data?.error?.message || 'Login failed';
-      actions.setError(errorMessage);
-    } finally {
-      actions.setLoading(false);
+    } catch (error: any) {
+      setAppState({
+        loading: false,
+        error: error.response?.data?.message || 'Login failed',
+      });
     }
   };
 
+  const handleChange = (field: keyof LoginCredentials) => (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setCredentials({ ...credentials, [field]: e.target.value });
+  };
+
+  const [loading] = useAppStore((state) => state.loading);
+  const [error] = useAppStore((state) => state.error);
+
   return (
-    <Container component="main" maxWidth="xs">
-      <Paper
-        elevation={3}
-        sx={{
-          padding: 4,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-        }}
+    <Container maxWidth="sm">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        minHeight="100vh"
       >
-          <Typography component="h1" variant="h4" gutterBottom>
-            Sign In
+        <Paper sx={{ p: 4, width: '100%' }}>
+          <Typography variant="h4" component="h1" gutterBottom align="center">
+            Login
           </Typography>
 
-          {state.error && (
-            <Alert severity="error" sx={{ width: '100%', mb: 2 }}>
-              {state.error}
+          {error && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {error}
             </Alert>
           )}
 
-          <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1, width: '100%' }}>
+          <Box component="form" onSubmit={handleSubmit}>
             <TextField
+              fullWidth
+              label="Email"
+              type="email"
+              value={credentials.email}
+              onChange={handleChange('email')}
               margin="normal"
               required
-              fullWidth
-              id="email"
-              label="Email Address"
-              name="email"
-              autoComplete="email"
-              autoFocus
-              value={formData.email}
-              onChange={handleChange}
-              error={!!errors.email}
-              helperText={errors.email}
+              disabled={loading}
             />
+
             <TextField
-              margin="normal"
-              required
               fullWidth
-              name="password"
               label="Password"
               type="password"
-              id="password"
-              autoComplete="current-password"
-              value={formData.password}
-              onChange={handleChange}
-              error={!!errors.password}
-              helperText={errors.password}
+              value={credentials.password}
+              onChange={handleChange('password')}
+              margin="normal"
+              required
+              disabled={loading}
             />
+
             <Button
               type="submit"
               fullWidth
               variant="contained"
               sx={{ mt: 3, mb: 2 }}
-              disabled={state.loading}
+              disabled={loading}
             >
-              {state.loading ? 'Signing In...' : 'Sign In'}
+              {loading ? <CircularProgress size={24} /> : 'Login'}
             </Button>
-            <Box textAlign="center">
-              <Link
-                component="button"
-                variant="body2"
-                onClick={(e) => {
-                  e.preventDefault();
-                  navigate('/signup');
-                }}
-              >
-                Don't have an account? Sign Up
-              </Link>
-            </Box>
           </Box>
         </Paper>
+      </Box>
     </Container>
   );
-};
+}

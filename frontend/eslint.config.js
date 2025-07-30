@@ -33,7 +33,6 @@ export default tseslint.config([
         'warn',
         { allowConstantExport: true },
       ],
-      // TypeScript specific rules
       '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
       '@typescript-eslint/consistent-type-imports': [
         'error',
@@ -46,7 +45,6 @@ export default tseslint.config([
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/explicit-module-boundary-types': 'off',
       '@typescript-eslint/no-explicit-any': 'warn',
-      // React specific rules
       'react/react-in-jsx-scope': 'off',
       'react/prop-types': 'off',
     },

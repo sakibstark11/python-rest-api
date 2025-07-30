@@ -10,7 +10,7 @@ type ProtectedRouteProps = {
 }
 
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const [{ user, accessToken, loading }, setAppState] = useAppStore((state) => state);
+  const [{ user, accessToken, loading }, setAppState] = useAppStore((state) => (state));
   const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
 
   useEffect(() => {
@@ -19,7 +19,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
         setHasCheckedAuth(true);
         return;
       }
-      
+
       setAppState({ loading: true });
       try {
         const authData = await AuthService.initializeAuth();

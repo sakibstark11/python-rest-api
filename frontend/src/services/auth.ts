@@ -39,7 +39,9 @@ export class AuthService {
   static async initializeAuth(): Promise<{ user: User; accessToken: string } | null> {
     try {
       const authResponse = await this.refreshToken();
-      const user = await this.getCurrentUser(authResponse.access_token);
+      // Set token BEFORE calling getCurrentUser
+      tokenManager.setToken(authResponse.access_token);
+      const user = await this.getCurrentUser();
       return {
         user,
         accessToken: authResponse.access_token,
@@ -54,17 +56,22 @@ export class AuthService {
     return response.data;
   }
 
-  static async getCurrentUser(token: string): Promise<User> {
-    const response = await api.get('/auth/me', {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+  static async getCurrentUser(token?: string): Promise<User> {
+    // If token is provided, set it temporarily for this request
+    if (token) {
+      tokenManager.setToken(token);
+    }
+    
+    const response = await api.get('/auth/me');
     return response.data;
   }
 
-  static logout(): void {
-    // Token cleanup will be handled by the context
+  static async logout(): Promise<void> {
+    try {
+      await api.post('/auth/logout');
+    } catch (error) {
+      // Even if logout fails on server, we'll clear local state
+    }
   }
 
   static isTokenValid(token: string): boolean {

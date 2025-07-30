@@ -2,7 +2,10 @@ import {
   Alert,
   Box,
   Button,
+  Card,
+  CardContent,
   CircularProgress,
+  Container,
   TextField,
   Typography
 } from '@mui/material';
@@ -19,13 +22,15 @@ export default function LoginPage() {
     email: '',
     password: '',
   });
-  const [{ user, accessToken }, setAppState] = useAppStore((state) => state);
+  const [accessToken, setAppState] = useAppStore((state) => state.accessToken);
+  const [loading] = useAppStore((state) => state.loading);
+  const [error] = useAppStore((state) => state.error);
 
   useEffect(() => {
-    if (user && accessToken && AuthService.isTokenValid(accessToken)) {
+    if (accessToken && AuthService.isTokenValid(accessToken)) {
       navigate('/');
-    } else if (accessToken && !AuthService.isTokenValid(accessToken)) {
-      setAppState({ user: null, accessToken: null });
+    } else {
+      setAppState({ user: null, accessToken: null, events: [], error: null, loading: false });
     }
   }, []);
 
@@ -36,9 +41,10 @@ export default function LoginPage() {
 
     try {
       const authResponse = await AuthService.login(credentials);
-      const user = await AuthService.getCurrentUser(authResponse.access_token);
 
       tokenManager.setToken(authResponse.access_token);
+      const user = await AuthService.getCurrentUser();
+
       setAppState({
         user,
         accessToken: authResponse.access_token,
@@ -59,54 +65,58 @@ export default function LoginPage() {
     setCredentials({ ...credentials, [field]: e.target.value });
   };
 
-  const [loading] = useAppStore((state) => state.loading);
-  const [error] = useAppStore((state) => state.error);
-
   return (
-    <>
-      <Typography variant="h4" component="h1" gutterBottom align="center">
-        Login
-      </Typography>
+    <Container maxWidth="xs">
+      <Card>
+        <CardContent>
+          <Box display="flex" flexDirection="column" alignItems="center">
+            <Typography variant="h4" align="center">
+              Login
+            </Typography>
+          </Box>
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
+          {error && (
+            <Alert severity="error" >
+              {error}
+            </Alert>
+          )}
 
-      <Box component="form" onSubmit={handleSubmit}>
-        <TextField
-          fullWidth
-          label="Email"
-          type="email"
-          value={credentials.email}
-          onChange={handleChange('email')}
-          margin="normal"
-          required
-          disabled={loading}
-        />
+          <Box component="form" onSubmit={handleSubmit}>
+            <TextField
+              fullWidth
+              label="Email"
+              type="email"
+              value={credentials.email}
+              onChange={handleChange('email')}
+              margin="normal"
+              required
+              disabled={loading}
+            />
 
-        <TextField
-          fullWidth
-          label="Password"
-          type="password"
-          value={credentials.password}
-          onChange={handleChange('password')}
-          margin="normal"
-          required
-          disabled={loading}
-        />
+            <TextField
+              fullWidth
+              label="Password"
+              type="password"
+              value={credentials.password}
+              onChange={handleChange('password')}
+              margin="normal"
+              required
+              disabled={loading}
+            />
 
-        <Button
-          type="submit"
-          fullWidth
-          variant="contained"
-          sx={{ mt: 3, mb: 2 }}
-          disabled={loading}
-        >
-          {loading ? <CircularProgress size={24} /> : 'Login'}
-        </Button>
-      </Box>
-    </>
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              sx={{ mt: 3, mb: 2 }}
+              disabled={loading}
+            >
+              {loading ? <CircularProgress size={24} /> : 'Login'}
+            </Button>
+          </Box>
+        </CardContent>
+      </Card>
+    </Container>
+
   );
 }

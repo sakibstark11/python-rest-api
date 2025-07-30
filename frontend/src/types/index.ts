@@ -42,7 +42,7 @@ export type EventCreate = {
   start_time: string;
   end_time: string;
   location?: string;
-  participant_emails?: string[];
+  participant_emails: string[];
 }
 
 export type LoginCredentials = {

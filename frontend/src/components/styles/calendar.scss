@@ -1,0 +1,177 @@
+$mui-primary-main: #90caf9;
+$mui-primary-dark: #42a5f5;
+$mui-primary-light: #bbdefb;
+$mui-primary-contrast: #000000;
+
+$mui-background-default: #121212;
+$mui-background-paper: #1e1e1e;
+
+$mui-text-primary: #ffffff;
+$mui-text-secondary: rgba(255, 255, 255, 0.7);
+$mui-text-disabled: rgba(255, 255, 255, 0.5);
+
+$mui-divider: #424242;
+$mui-success-main: #66bb6a;
+
+$mui-action-hover: rgba(255, 255, 255, 0.08);
+$mui-action-selected: rgba(255, 255, 255, 0.12);
+$mui-action-disabled-bg: rgba(255, 255, 255, 0.12);
+
+
+
+$out-of-range-color: $mui-text-disabled !default;
+$out-of-range-bg-color: $mui-action-disabled-bg !default;
+
+
+$calendar-border: $mui-divider !default;
+$cell-border: $mui-divider !default;
+$border-color: $mui-divider !default;
+
+
+$time-selection-color: $mui-primary-contrast !default;
+$time-selection-bg-color: rgba($mui-primary-main, 0.5) !default;
+$date-selection-bg-color: $mui-action-selected !default;
+
+
+$event-bg: $mui-primary-main !default;
+$event-border: $mui-primary-dark !default;
+$event-outline: $mui-primary-light !default;
+$event-color: $mui-primary-contrast !default;
+$event-border-radius: 4px !default;
+$event-padding: 4px 8px !default;
+$event-zindex: 4 !default;
+
+
+$btn-color: $mui-text-primary !default;
+$btn-bg: $mui-background-paper !default;
+$btn-border: $mui-divider !default;
+
+
+$current-time-color: $mui-success-main !default;
+
+
+$today-highlight-bg: $mui-action-hover !default;
+
+
+$segment-width: 0.14286% !default;
+$rbc-css-prefix: rbc-i !default;
+
+@import 'react-big-calendar/lib/sass/styles';
+
+.rbc-calendar {
+  font-family: var(--mui-typography-fontFamily) !important;
+  background-color: var(--mui-palette-background-default);
+
+  * {
+    font-family: inherit !important;
+  }
+
+  .rbc-toolbar {
+    background-color: var(--mui-palette-background-paper);
+    border-bottom: 1px solid var(--mui-palette-divider);
+
+    button {
+      font-family: var(--mui-typography-fontFamily);
+      font-weight: var(--mui-typography-fontWeightMedium);
+      color: var(--mui-palette-text-primary);
+      background-color: var(--mui-palette-background-paper);
+      border-color: var(--mui-palette-divider);
+
+      &:hover {
+        background-color: var(--mui-palette-action-hover);
+      }
+
+      &.rbc-active {
+        background-color: var(--mui-palette-primary-main);
+        color: var(--mui-palette-primary-contrastText);
+        border-color: var(--mui-palette-primary-dark);
+      }
+    }
+  }
+
+  .rbc-header {
+    background-color: var(--mui-palette-background-paper);
+    border-bottom: 1px solid var(--mui-palette-divider);
+    color: var(--mui-palette-text-primary);
+    font-weight: var(--mui-typography-fontWeightMedium);
+  }
+
+  .rbc-today {
+    background-color: var(--mui-palette-action-hover);
+  }
+
+  .rbc-selected {
+    background-color: var(--mui-palette-action-selected);
+  }
+
+  .rbc-event {
+    background-color: var(--mui-palette-primary-main) !important;
+    border-color: var(--mui-palette-primary-dark) !important;
+    color: var(--mui-palette-primary-contrastText) !important;
+    border-radius: var(--mui-shape-borderRadius);
+    font-family: var(--mui-typography-fontFamily) !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    padding: 2px 6px !important;
+    min-height: 20px !important;
+
+    &:focus,
+    &:hover {
+      outline: 2px solid var(--mui-palette-primary-light);
+      outline-offset: 1px;
+      background-color: var(--mui-palette-primary-main) !important;
+      opacity: 1 !important;
+    }
+
+    &.rbc-selected {
+      background-color: var(--mui-palette-primary-dark) !important;
+      opacity: 1 !important;
+    }
+
+    .rbc-event-content {
+      font-family: inherit !important;
+      font-size: 0.875rem;
+      line-height: 1.2;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  .rbc-time-view {
+    .rbc-time-gutter {
+      background-color: var(--mui-palette-background-paper);
+      border-right: 1px solid var(--mui-palette-divider);
+      color: var(--mui-palette-text-secondary);
+    }
+
+    .rbc-time-header {
+      border-bottom: 1px solid var(--mui-palette-divider);
+    }
+
+    .rbc-time-content {
+      border-top: 1px solid var(--mui-palette-divider);
+    }
+  }
+
+  .rbc-current-time-indicator {
+    background-color: var(--mui-palette-success-main);
+    height: 2px;
+  }
+
+  .rbc-time-slot,
+  .rbc-day-slot,
+  .rbc-date-cell {
+    border-color: var(--mui-palette-divider);
+  }
+
+  .rbc-off-range {
+    color: var(--mui-palette-text-disabled);
+  }
+
+  .rbc-off-range-bg {
+    background-color: var(--mui-palette-action-disabledBackground);
+  }
+}

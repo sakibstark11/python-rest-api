@@ -1,6 +1,5 @@
-import { createContext, useCallback, useContext, useRef } from 'react';
-import { useSyncExternalStore } from 'react';
 import type { ReactNode } from 'react';
+import { createContext, useCallback, useContext, useRef, useSyncExternalStore } from 'react';
 
 export default function createFastContext<Store>(initialState: Store) {
   function useStoreData(): {
@@ -43,21 +42,32 @@ export default function createFastContext<Store>(initialState: Store) {
     );
   }
 
+
+
+
   function useStore<SelectorOutput>(
     selector: (store: Store) => SelectorOutput
-  ): [SelectorOutput, (value: Partial<Store>) => void] {
+  ): [SelectorOutput, (value: Partial<Store>) => void];
+
+  function useStore(): [(value: Partial<Store>) => void];
+
+  function useStore<SelectorOutput>(
+    selector?: (store: Store) => SelectorOutput
+  ): [SelectorOutput, (value: Partial<Store>) => void] | [(value: Partial<Store>) => void] {
     const store = useContext(StoreContext);
     if (!store) {
       throw new Error("Store not found");
     }
 
-    const state = useSyncExternalStore(
-      store.subscribe,
-      () => selector(store.get()),
-      () => selector(initialState)
-    );
-
-    return [state, store.set];
+    if (selector) {
+      const state = useSyncExternalStore(
+        store.subscribe,
+        () => selector(store.get()),
+        () => selector(initialState)
+      );
+      return [state, store.set]
+    }
+    return [store.set];
   }
 
   return {

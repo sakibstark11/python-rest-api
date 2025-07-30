@@ -2,6 +2,11 @@ import { Close } from '@mui/icons-material';
 import {
   Box,
   Button,
+  Card,
+  CardContent,
+  Chip,
+  Container,
+  Grid,
   IconButton,
   Modal,
   TextField,
@@ -12,6 +17,10 @@ import { useAppStore } from '../context/AppContext';
 import { EventService } from '../services/events';
 import type { EventCreate } from '../types';
 
+type FormData = EventCreate & {
+  participant_input: string;
+};
+
 interface CreateEventModalProps {
   open: boolean;
   onClose: () => void;
@@ -19,20 +28,42 @@ interface CreateEventModalProps {
 
 export default function CreateEventModal({ open, onClose }: CreateEventModalProps) {
   const [, setAppState] = useAppStore((state) => state);
-  const [formData, setFormData] = useState<EventCreate>({
+  const [formData, setFormData] = useState<FormData>({
     title: '',
     description: '',
     start_time: '',
     end_time: '',
     location: '',
     participant_emails: [],
+    participant_input: '',
   });
   const [loading, setLoading] = useState(false);
 
-  const handleChange = (field: keyof EventCreate) => (
+  const handleChange = (field: keyof FormData) => (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
     setFormData({ ...formData, [field]: e.target.value });
+  };
+
+  const removeParticipant = (emailToRemove: string) => {
+    setFormData({
+      ...formData,
+      participant_emails: formData.participant_emails.filter(email => email !== emailToRemove)
+    });
+  };
+
+  const handleParticipantKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const email = formData.participant_input.trim();
+      if (email && !formData.participant_emails.includes(email)) {
+        setFormData({
+          ...formData,
+          participant_emails: [...formData.participant_emails, email],
+          participant_input: ''
+        });
+      }
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -40,9 +71,10 @@ export default function CreateEventModal({ open, onClose }: CreateEventModalProp
     setLoading(true);
 
     try {
-      await EventService.createEvent(formData);
 
-      // Refresh events list
+      const { participant_input, ...eventData } = formData;
+      await EventService.createEvent(eventData);
+
       const now = new Date();
       const dayOfWeek = now.getUTCDay();
       const diff = now.getUTCDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
@@ -61,7 +93,6 @@ export default function CreateEventModal({ open, onClose }: CreateEventModalProp
 
       setAppState({ events: updatedEvents });
 
-      // Reset form and close modal
       setFormData({
         title: '',
         description: '',
@@ -69,6 +100,7 @@ export default function CreateEventModal({ open, onClose }: CreateEventModalProp
         end_time: '',
         location: '',
         participant_emails: [],
+        participant_input: '',
       });
       onClose();
     } catch (error) {
@@ -79,97 +111,123 @@ export default function CreateEventModal({ open, onClose }: CreateEventModalProp
   };
 
   return (
-    <Modal open={open} onClose={onClose}>
-      <Box
-        sx={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: { xs: '90%', sm: 400 },
-          bgcolor: 'background.paper',
-          boxShadow: 24,
-          p: 4,
-          borderRadius: 2,
-        }}
-      >
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-          <Typography variant="h6">Create New Event</Typography>
-          <IconButton onClick={onClose}>
-            <Close />
-          </IconButton>
-        </Box>
+    <Modal
+      open={open}
+      onClose={onClose}
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}
+    >
+      <Container maxWidth="sm">
+        <Card>
+          <CardContent>
+            <Grid display="flex" justifyContent="space-between" alignItems="center">
+              <Typography variant="h6">Create New Event</Typography>
+              <IconButton onClick={onClose}>
+                <Close />
+              </IconButton>
+            </Grid>
 
-        <Box component="form" onSubmit={handleSubmit}>
-          <TextField
-            fullWidth
-            label="Event Title"
-            value={formData.title}
-            onChange={handleChange('title')}
-            margin="normal"
-            required
-          />
+            <Box component="form" onSubmit={handleSubmit}>
+              <TextField
+                fullWidth
+                label="Event Title"
+                value={formData.title}
+                onChange={handleChange('title')}
+                margin="normal"
+                required
+              />
 
-          <TextField
-            fullWidth
-            label="Description"
-            value={formData.description}
-            onChange={handleChange('description')}
-            margin="normal"
-            multiline
-            rows={3}
-          />
+              <TextField
+                fullWidth
+                label="Description"
+                value={formData.description}
+                onChange={handleChange('description')}
+                margin="normal"
+                multiline
+                rows={3}
+              />
 
-          <TextField
-            fullWidth
-            label="Start Time"
-            type="datetime-local"
-            value={formData.start_time}
-            onChange={handleChange('start_time')}
-            margin="normal"
-            required
-            InputLabelProps={{ shrink: true }}
-          />
+              <TextField
+                fullWidth
+                label="Start Time"
+                type="datetime-local"
+                value={formData.start_time}
+                onChange={handleChange('start_time')}
+                margin="normal"
+                required
+                InputLabelProps={{ shrink: true }}
+              />
 
-          <TextField
-            fullWidth
-            label="End Time"
-            type="datetime-local"
-            value={formData.end_time}
-            onChange={handleChange('end_time')}
-            margin="normal"
-            required
-            InputLabelProps={{ shrink: true }}
-          />
+              <TextField
+                fullWidth
+                label="End Time"
+                type="datetime-local"
+                value={formData.end_time}
+                onChange={handleChange('end_time')}
+                margin="normal"
+                required
+                InputLabelProps={{ shrink: true }}
+              />
 
-          <TextField
-            fullWidth
-            label="Location"
-            value={formData.location}
-            onChange={handleChange('location')}
-            margin="normal"
-          />
+              <TextField
+                fullWidth
+                label="Location"
+                value={formData.location}
+                onChange={handleChange('location')}
+                margin="normal"
+              />
 
-          <Box display="flex" gap={2} mt={3}>
-            <Button
-              type="submit"
-              variant="contained"
-              disabled={loading}
-              fullWidth
-            >
-              {loading ? 'Creating...' : 'Create Event'}
-            </Button>
-            <Button
-              variant="outlined"
-              onClick={onClose}
-              disabled={loading}
-              fullWidth
-            >
-              Cancel
-            </Button>
-          </Box>
-        </Box>
-      </Box>
+              <TextField
+                fullWidth
+                label="Add Participants"
+                placeholder="Enter email and press Enter"
+                value={formData.participant_input}
+                onChange={handleChange('participant_input')}
+                onKeyDown={handleParticipantKeyDown}
+                margin="normal"
+                type="email"
+              />
+
+              {formData.participant_emails.length > 0 && (
+                <Box>
+                  {formData.participant_emails.map((email) => (
+                    <Chip
+                      key={email}
+                      label={email}
+                      onDelete={() => removeParticipant(email)}
+                      size="small"
+                    />
+                  ))}
+                </Box>
+              )}
+
+              <Box display="flex" gap={2} mt={3}>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  disabled={loading}
+                  fullWidth
+                >
+                  {loading ? 'Creating...' : 'Create Event'}
+                </Button>
+                <Button
+                  variant="outlined"
+                  onClick={onClose}
+                  disabled={loading}
+                  fullWidth
+                >
+                  Cancel
+                </Button>
+              </Box>
+            </Box>
+          </CardContent>
+        </Card>
+      </Container>
+
+
     </Modal>
   );
 }

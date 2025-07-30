@@ -5,7 +5,8 @@ import { useEffect, useState } from 'react';
 import { Calendar, momentLocalizer, Views } from 'react-big-calendar';
 import { useAppStore } from '../context/AppContext';
 import { EventService } from '../services/events';
-import CreateEventModal from './CreateEventModal';
+import type { Event } from '../types';
+import EventModal from './EventModal';
 import './styles/calendar.scss';
 
 const localizer = momentLocalizer(moment);
@@ -13,6 +14,7 @@ const localizer = momentLocalizer(moment);
 export default function WeeklyEvents() {
   const [events, setAppState] = useAppStore(state => state.events);
   const [modalOpen, setModalOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<Event | undefined>(undefined);
   const theme = useTheme();
 
   useEffect(() => {
@@ -99,6 +101,10 @@ export default function WeeklyEvents() {
           step={60}
           toolbar
           style={{ height: '100%', width: '100%', overflow: 'auto' }}
+          onSelectEvent={event => {
+            setModalOpen(true);
+            setSelectedEvent(event.resource);
+          }}
         />
       </Box>
 
@@ -116,9 +122,11 @@ export default function WeeklyEvents() {
         <Add />
       </Fab>
 
-      <CreateEventModal
+      <EventModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
+        eventData={selectedEvent}
+        edit={!!selectedEvent}
       />
     </>
   );

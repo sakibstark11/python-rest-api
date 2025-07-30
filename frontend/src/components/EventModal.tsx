@@ -12,22 +12,27 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAppStore } from '../context/AppContext';
 import { EventService } from '../services/events';
-import type { EventCreate } from '../types';
+import type { Event, EventCreate } from '../types';
 
 type FormData = EventCreate & {
   participant_input: string;
 };
 
-interface CreateEventModalProps {
-  open: boolean;
-  onClose: () => void;
-}
 
-export default function CreateEventModal({ open, onClose }: CreateEventModalProps) {
-  const [, setAppState] = useAppStore((state) => state);
+type EventModalProps =
+  {
+    open: boolean;
+    onClose: () => void;
+    eventData?: Event;
+    edit?: boolean;
+  }
+
+export default function CreateEventModal({ open, onClose, edit, eventData }: EventModalProps) {
+  const [loading, setAppState] = useAppStore((state) => state.loading);
+  const [previousEvents] = useAppStore((state) => state.events);
   const [formData, setFormData] = useState<FormData>({
     title: '',
     description: '',
@@ -37,7 +42,20 @@ export default function CreateEventModal({ open, onClose }: CreateEventModalProp
     participant_emails: [],
     participant_input: '',
   });
-  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (edit && eventData) {
+      setFormData({
+        title: eventData.title,
+        description: eventData.description,
+        start_time: new Date(new Date(eventData.start_time).getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16),
+        end_time: new Date(new Date(eventData.end_time).getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16),
+        location: eventData.location,
+        participant_emails: eventData.participants.map(p => p.user.email),
+        participant_input: '',
+      });
+    }
+  }, [edit, eventData]);
 
   const handleChange = (field: keyof FormData) => (
     e: React.ChangeEvent<HTMLInputElement>
@@ -68,31 +86,22 @@ export default function CreateEventModal({ open, onClose }: CreateEventModalProp
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setAppState({ loading: true });
 
     try {
+      const { participant_input, ...rest } = formData;
 
-      const { participant_input, ...eventData } = formData;
-      await EventService.createEvent(eventData);
-
-      const now = new Date();
-      const dayOfWeek = now.getUTCDay();
-      const diff = now.getUTCDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
-      const monday = new Date(now);
-      monday.setUTCDate(diff);
-      monday.setUTCHours(0, 0, 0, 0);
-
-      const sunday = new Date(monday);
-      sunday.setUTCDate(monday.getUTCDate() + 6);
-      sunday.setUTCHours(23, 59, 59, 999);
-
-      const updatedEvents = await EventService.getEvents(
-        monday.toISOString(),
-        sunday.toISOString()
-      );
-
-      setAppState({ events: updatedEvents });
-
+      if (edit && eventData) {
+        const updatedEvent = await EventService.updateEvent(eventData.id, rest);
+        setAppState({
+          events: previousEvents.map(event =>
+            event.id === updatedEvent.id ? updatedEvent : event
+          )
+        });
+      } else {
+        const newEvent = await EventService.createEvent(rest);
+        setAppState({ events: [...previousEvents, newEvent] });
+      }
       setFormData({
         title: '',
         description: '',
@@ -106,10 +115,9 @@ export default function CreateEventModal({ open, onClose }: CreateEventModalProp
     } catch (error) {
       setAppState({ error: 'Failed to create event' });
     } finally {
-      setLoading(false);
-    }
-  };
-
+      setAppState({ loading: false })
+    };
+  }
   return (
     <Modal
       open={open}
@@ -211,7 +219,7 @@ export default function CreateEventModal({ open, onClose }: CreateEventModalProp
                   disabled={loading}
                   fullWidth
                 >
-                  {loading ? 'Creating...' : 'Create Event'}
+                  {loading ? `${edit ? 'Upda' : 'Crea'}ting...` : `${edit ? 'Update' : 'Create'} Event`}
                 </Button>
                 <Button
                   variant="outlined"
@@ -226,8 +234,6 @@ export default function CreateEventModal({ open, onClose }: CreateEventModalProp
           </CardContent>
         </Card>
       </Container>
-
-
     </Modal>
   );
 }

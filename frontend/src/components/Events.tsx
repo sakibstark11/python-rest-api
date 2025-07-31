@@ -13,8 +13,9 @@ const localizer = momentLocalizer(moment);
 
 export default function WeeklyEvents() {
   const [events, setAppState] = useAppStore(state => state.events);
+  const [userId] = useAppStore(state => state.user?.id)
   const [modalOpen, setModalOpen] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<Event | undefined>(undefined);
+  const [selectedEvent, setSelectedEvent] = useState<Event | undefined>();
   const theme = useTheme();
 
   useEffect(() => {
@@ -59,7 +60,7 @@ export default function WeeklyEvents() {
       <Box
         sx={{
           width: '100%',
-          height: '80vh',
+          height: '89vh',
           display: 'flex',
           '--mui-palette-background-paper': theme.palette.background.paper,
           '--mui-palette-background-default': theme.palette.background.default,
@@ -122,12 +123,15 @@ export default function WeeklyEvents() {
         <Add />
       </Fab>
 
-      <EventModal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        eventData={selectedEvent}
-        edit={!!selectedEvent}
-      />
+      {
+        modalOpen && <EventModal
+          onClose={() => {
+            setModalOpen(false)
+            setSelectedEvent(undefined)
+          }}
+          eventData={selectedEvent}
+          edit={selectedEvent && selectedEvent.creator_id === userId}
+        />}
     </>
   );
 }

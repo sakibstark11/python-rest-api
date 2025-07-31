@@ -1,4 +1,4 @@
-import { Close } from '@mui/icons-material';
+import { Check, Clear, Close } from '@mui/icons-material';
 import {
   Box,
   Button,
@@ -12,7 +12,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useAppStore } from '../context/AppContext';
 import { EventService } from '../services/events';
 import type { Event, EventCreate } from '../types';
@@ -24,38 +24,76 @@ type FormData = EventCreate & {
 
 type EventModalProps =
   {
-    open: boolean;
     onClose: () => void;
     eventData?: Event;
     edit?: boolean;
   }
 
-export default function CreateEventModal({ open, onClose, edit, eventData }: EventModalProps) {
+export default function CreateEventModal({ onClose, edit, eventData }: EventModalProps) {
   const [loading, setAppState] = useAppStore((state) => state.loading);
   const [previousEvents] = useAppStore((state) => state.events);
-  const [formData, setFormData] = useState<FormData>({
-    title: '',
-    description: '',
-    start_time: '',
-    end_time: '',
-    location: '',
-    participant_emails: [],
+  const [currentUser] = useAppStore((state) => state.user);
+  const [formData, setFormData] = useState<FormData>(() => ({
+    title: eventData?.title || '',
+    description: eventData?.description || '',
+    start_time: eventData
+      ? new Date(new Date(eventData.start_time).getTime() - new Date().getTimezoneOffset() * 60000)
+        .toISOString()
+        .slice(0, 16)
+      : '',
+    end_time: eventData
+      ? new Date(new Date(eventData.end_time).getTime() - new Date().getTimezoneOffset() * 60000)
+        .toISOString()
+        .slice(0, 16)
+      : '',
+    location: eventData?.location || '',
+    participant_emails: eventData?.participants?.map(p => p.user.email) || [],
     participant_input: '',
-  });
+  }));
+  const responseMode = !edit && !!eventData
 
-  useEffect(() => {
-    if (edit && eventData) {
-      setFormData({
-        title: eventData.title,
-        description: eventData.description,
-        start_time: new Date(new Date(eventData.start_time).getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16),
-        end_time: new Date(new Date(eventData.end_time).getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16),
-        location: eventData.location,
-        participant_emails: eventData.participants.map(p => p.user.email),
-        participant_input: '',
-      });
+  const userParticipation = eventData?.participants?.find(p => p.user.id === currentUser?.id);
+  const userStatus = userParticipation?.status;
+
+  const getHeaderText = () => {
+    if (edit) {
+      return 'Edit Event'
     }
-  }, [edit, eventData]);
+    if (responseMode) {
+      return 'Respond to Event'
+    }
+    return 'Create New Event'
+  }
+  const handleResponse = async (status: 'accepted' | 'declined') => {
+    if (!eventData) return;
+
+    setAppState({ loading: true });
+
+    try {
+      await EventService.respondToEvent(eventData.id, status);
+
+      const updatedEvents = previousEvents.map(event => {
+        if (event.id === eventData.id) {
+          return {
+            ...event,
+            participants: event.participants.map(p =>
+              p.user.id === eventData.participants.find(part => part.status === 'pending')?.user.id
+                ? { ...p, status, responded_at: new Date().toISOString() }
+                : p
+            )
+          };
+        }
+        return event;
+      });
+
+      setAppState({ events: updatedEvents });
+      onClose();
+    } catch (error) {
+      setAppState({ error: 'Failed to respond to event' });
+    } finally {
+      setAppState({ loading: false });
+    }
+  };
 
   const handleChange = (field: keyof FormData) => (
     e: React.ChangeEvent<HTMLInputElement>
@@ -102,15 +140,6 @@ export default function CreateEventModal({ open, onClose, edit, eventData }: Eve
         const newEvent = await EventService.createEvent(rest);
         setAppState({ events: [...previousEvents, newEvent] });
       }
-      setFormData({
-        title: '',
-        description: '',
-        start_time: '',
-        end_time: '',
-        location: '',
-        participant_emails: [],
-        participant_input: '',
-      });
       onClose();
     } catch (error) {
       setAppState({ error: 'Failed to create event' });
@@ -118,9 +147,10 @@ export default function CreateEventModal({ open, onClose, edit, eventData }: Eve
       setAppState({ loading: false })
     };
   }
+
   return (
     <Modal
-      open={open}
+      open
       onClose={onClose}
       sx={{
         display: 'flex',
@@ -132,7 +162,7 @@ export default function CreateEventModal({ open, onClose, edit, eventData }: Eve
         <Card>
           <CardContent>
             <Grid display="flex" justifyContent="space-between" alignItems="center">
-              <Typography variant="h6">Create New Event</Typography>
+              <Typography variant="h6">{getHeaderText()}</Typography>
               <IconButton onClick={onClose}>
                 <Close />
               </IconButton>
@@ -146,6 +176,7 @@ export default function CreateEventModal({ open, onClose, edit, eventData }: Eve
                 onChange={handleChange('title')}
                 margin="normal"
                 required
+                disabled={responseMode}
               />
 
               <TextField
@@ -155,6 +186,7 @@ export default function CreateEventModal({ open, onClose, edit, eventData }: Eve
                 onChange={handleChange('description')}
                 margin="normal"
                 multiline
+                disabled={responseMode}
                 rows={3}
               />
 
@@ -167,6 +199,7 @@ export default function CreateEventModal({ open, onClose, edit, eventData }: Eve
                 margin="normal"
                 required
                 InputLabelProps={{ shrink: true }}
+                disabled={responseMode}
               />
 
               <TextField
@@ -178,6 +211,7 @@ export default function CreateEventModal({ open, onClose, edit, eventData }: Eve
                 margin="normal"
                 required
                 InputLabelProps={{ shrink: true }}
+                disabled={responseMode}
               />
 
               <TextField
@@ -186,6 +220,7 @@ export default function CreateEventModal({ open, onClose, edit, eventData }: Eve
                 value={formData.location}
                 onChange={handleChange('location')}
                 margin="normal"
+                disabled={responseMode}
               />
 
               <TextField
@@ -197,6 +232,7 @@ export default function CreateEventModal({ open, onClose, edit, eventData }: Eve
                 onKeyDown={handleParticipantKeyDown}
                 margin="normal"
                 type="email"
+                disabled={responseMode}
               />
 
               {formData.participant_emails.length > 0 && (
@@ -207,29 +243,55 @@ export default function CreateEventModal({ open, onClose, edit, eventData }: Eve
                       label={email}
                       onDelete={() => removeParticipant(email)}
                       size="small"
+                      disabled={responseMode}
                     />
                   ))}
                 </Box>
               )}
 
-              <Box display="flex" gap={2} mt={3}>
-                <Button
-                  type="submit"
-                  variant="contained"
-                  disabled={loading}
-                  fullWidth
-                >
-                  {loading ? `${edit ? 'Upda' : 'Crea'}ting...` : `${edit ? 'Update' : 'Create'} Event`}
-                </Button>
-                <Button
-                  variant="outlined"
-                  onClick={onClose}
-                  disabled={loading}
-                  fullWidth
-                >
-                  Cancel
-                </Button>
-              </Box>
+              {
+                responseMode == false ?
+                  <Box display="flex" gap={2} mt={3}>
+                    <Button
+                      type="submit"
+                      variant="contained"
+                      disabled={loading}
+                      fullWidth
+                    >
+                      {loading ? `${edit ? 'Upda' : 'Crea'}ting...` : `${edit ? 'Update' : 'Create'} Event`}
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      onClick={onClose}
+                      disabled={loading}
+                      fullWidth
+                    >
+                      Cancel
+                    </Button>
+                  </Box> :
+                  <Box display="flex" gap={2} mt={3}>
+                    <Button
+                      variant={userStatus === 'accepted' ? 'contained' : 'outlined'}
+                      color="success"
+                      startIcon={<Check />}
+                      onClick={() => handleResponse('accepted')}
+                      disabled={loading || userStatus === 'accepted'}
+                      fullWidth
+                    >
+                      {loading ? 'Responding...' : 'Accept'}
+                    </Button>
+                    <Button
+                      variant={userStatus === 'declined' ? 'contained' : 'outlined'}
+                      color="error"
+                      startIcon={<Clear />}
+                      onClick={() => handleResponse('declined')}
+                      disabled={loading || userStatus === 'declined'}
+                      fullWidth
+                    >
+                      {loading ? 'Responding...' : 'Decline'}
+                    </Button>
+                  </Box>
+              }
             </Box>
           </CardContent>
         </Card>

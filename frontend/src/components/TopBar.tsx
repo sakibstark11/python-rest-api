@@ -16,7 +16,7 @@ import { tokenManager } from '../services/tokenManager';
 
 export default function TopBar() {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [setAppState] = useAppStore();
+  const [email, setAppState] = useAppStore(state => state.user?.email);
   const navigate = useNavigate();
   const open = Boolean(anchorEl);
 
@@ -58,30 +58,37 @@ export default function TopBar() {
         <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
           Calendar App
         </Typography>
-        <IconButton
-          size="large"
-          edge="end"
-          color="inherit"
-          aria-label="profile"
-          onClick={handleProfileClick}
-        >
-          <AccountCircle />
-        </IconButton>
-        <Menu
-          anchorEl={anchorEl}
-          open={open}
-          onClose={handleClose}
-          onClick={handleClose}
-          transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-          anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-        >
-          <MenuItem onClick={handleLogout}>
-            <ListItemIcon>
-              <Logout fontSize="small" />
-            </ListItemIcon>
-            Logout
-          </MenuItem>
-        </Menu>
+        {email &&
+          <>
+            <Typography variant='h6'>{email}</Typography>
+            <IconButton
+              size="large"
+              edge="end"
+              color="inherit"
+              aria-label="profile"
+              onClick={handleProfileClick}
+            >
+              <AccountCircle />
+            </IconButton>
+            <Menu
+              anchorEl={anchorEl}
+              open={open}
+              onClose={handleClose}
+              onClick={handleClose}
+              transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+              anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+            >
+              <MenuItem>
+                <ListItemIcon onClick={handleLogout}>
+                  <Logout fontSize="small" />
+                </ListItemIcon>
+                Logout
+              </MenuItem>
+            </Menu>
+          </>
+
+        }
+
       </Toolbar>
     </AppBar>
   );

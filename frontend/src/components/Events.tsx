@@ -6,7 +6,7 @@ import { Calendar, momentLocalizer, Views } from 'react-big-calendar';
 import { useAppStore } from '../context/AppContext';
 import { EventService } from '../services/events';
 import type { Event } from '../types';
-import EventModal from './EventModal';
+import EventModal from './Event';
 import './styles/calendar.scss';
 
 const localizer = momentLocalizer(moment);

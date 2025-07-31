@@ -14,6 +14,7 @@
         "ms-vscode.vscode-json",
         "redhat.vscode-yaml",
         "ms-vscode.docker",
+        "ms-python.isort",
         "humao.rest-client",
         "github.copilot"
       ],

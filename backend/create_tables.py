@@ -1,6 +1,6 @@
 import asyncio
-from core.database import engine, Base
-from models import User, Event, UserEvent
+
+from core.database import Base, engine
 
 
 async def create_tables():

@@ -1,13 +1,14 @@
+import asyncio
 import datetime
 from typing import Optional, Sequence
 
-from sqlalchemy import and_, or_, select
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
-
+from crud.user import get_user_by_email
 from models.event import Event
 from models.user_event import UserEvent
 from schemas.event import EventCreate, EventUpdate
+from sqlalchemy import and_, delete, or_, select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 
 async def create_event(db: AsyncSession, event: EventCreate, creator_id: str) -> Event:
@@ -74,8 +75,13 @@ async def update_event(
         return None
 
     update_data = event_update.model_dump(exclude_unset=True)
+    participant_emails = update_data.pop('participant_emails', None)
+
     for field, value in update_data.items():
         setattr(db_event, field, value)
+
+    if participant_emails is not None:
+        await update_event_participants(db, event_id, participant_emails)
 
     await db.commit()
     await db.refresh(db_event)
@@ -135,3 +141,37 @@ async def get_user_participation(
         )
     )
     return result.scalar_one_or_none()
+
+
+async def update_event_participants(
+    db: AsyncSession, event_id: str, participant_emails: list[str]
+) -> None:
+    result = await db.execute(
+        select(UserEvent).where(UserEvent.event_id == event_id)
+    )
+    current_participant_users = result.scalars().all()
+    current_user_ids = {p.user_id for p in current_participant_users}
+
+    # Lookup users by email concurrently
+    users = await asyncio.gather(
+        *(get_user_by_email(db, email=email) for email in participant_emails)
+    )
+    new_user_ids = {u.id for u in [user for user in users if user]}
+
+    users_to_remove = current_user_ids - new_user_ids
+    users_to_add = new_user_ids - current_user_ids
+
+    if users_to_remove:
+        await db.execute(
+            delete(UserEvent).where(
+                and_(
+                    UserEvent.event_id == event_id,
+                    UserEvent.user_id.in_(users_to_remove)
+                )
+            )
+        )
+
+    await asyncio.gather(
+        *(add_event_participant(db, event_id=event_id, user_id=user_id)
+          for user_id in users_to_add)
+    )

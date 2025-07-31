@@ -38,6 +38,7 @@ class EventUpdate(BaseModel):
     start_time: Optional[datetime] = None
     end_time: Optional[datetime] = None
     location: Optional[str] = None
+    participant_emails: Optional[List[str]] = None
 
 
 class UserInfo(BaseModel):

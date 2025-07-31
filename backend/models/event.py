@@ -1,17 +1,17 @@
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import (DateTime, ForeignKey, Index, String, Text)
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-
 from core.database import Base
 from core.utils import generate_ulid, utc_now
+from sqlalchemy import DateTime, ForeignKey, Index, String, Text
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 
 class Event(Base):
     __tablename__ = "events"
 
-    id: Mapped[str] = mapped_column(String, primary_key=True, default=generate_ulid, index=True)
+    id: Mapped[str] = mapped_column(
+        String, primary_key=True, default=generate_ulid, index=True)
     title: Mapped[str] = mapped_column(String, nullable=False, index=True)
     description: Mapped[Optional[str]] = mapped_column(Text)
     start_time: Mapped[datetime] = mapped_column(

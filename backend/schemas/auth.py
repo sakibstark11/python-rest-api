@@ -21,3 +21,4 @@ class TokenPayload(BaseModel):
     sub: Optional[str]
     exp: Optional[int]
     type: Optional[str] = "access"
+    type: Optional[str] = "access"

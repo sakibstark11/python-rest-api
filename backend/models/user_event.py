@@ -1,11 +1,10 @@
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import DateTime, ForeignKey, Index, String
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-
 from core.database import Base
 from core.utils import generate_ulid, utc_now
+from sqlalchemy import DateTime, ForeignKey, Index, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 
 class UserEvent(Base):

@@ -1,11 +1,10 @@
 from typing import Optional
 
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from core.password import get_password_hash, verify_password
 from models.user import User
 from schemas.user import UserCreate
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 async def get_user_by_id(db: AsyncSession, user_id: str) -> Optional[User]:

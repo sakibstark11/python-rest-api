@@ -3,7 +3,6 @@ import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAppStore } from '../context/AppContext';
 import { AuthService } from '../services/auth';
-import { tokenManager } from '../services/tokenManager';
 
 type ProtectedRouteProps = {
   children: React.ReactNode;
@@ -24,7 +23,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
       try {
         const authData = await AuthService.initializeAuth();
         if (authData) {
-          tokenManager.setToken(authData.accessToken);
+          AuthService.setToken(authData.accessToken);
           setAppState({
             user: authData.user,
             accessToken: authData.accessToken,
@@ -43,7 +42,6 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
     tryInitializeAuth();
   }, []);
 
-  // Show loading while checking auth or during auth operations
   if (loading || !hasCheckedAuth) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center">
@@ -52,7 +50,6 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
     );
   }
 
-  // Only redirect after auth check is complete
   if (!user || !accessToken) {
     return <Navigate to="/login" replace />;
   }

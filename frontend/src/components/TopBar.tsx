@@ -12,7 +12,6 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '../context/AppContext';
 import { AuthService } from '../services/auth';
-import { tokenManager } from '../services/tokenManager';
 
 export default function TopBar() {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -31,7 +30,7 @@ export default function TopBar() {
   const handleLogout = async () => {
     try {
       await AuthService.logout();
-      tokenManager.removeToken();
+      AuthService.removeToken();
       setAppState({
         user: null,
         accessToken: null,
@@ -40,7 +39,7 @@ export default function TopBar() {
       });
       navigate('/login');
     } catch (error) {
-      tokenManager.removeToken();
+      AuthService.removeToken();
       setAppState({
         user: null,
         accessToken: null,

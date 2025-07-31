@@ -16,9 +16,15 @@ export type UserInfo = {
   last_name: string;
 }
 
+export const ParticipantStatus = {
+  ACCEPTED: 'accepted',
+  DECLINED: 'declined',
+  PENDING: 'pending',
+} as const
+
 export type ParticipantResponse = {
   user: UserInfo;
-  status: string;
+  status: (typeof ParticipantStatus)[keyof typeof ParticipantStatus];
   invited_at: string;
   responded_at?: string;
 }

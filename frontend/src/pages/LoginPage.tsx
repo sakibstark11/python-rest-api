@@ -13,7 +13,6 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '../context/AppContext';
 import { AuthService } from '../services/auth';
-import { tokenManager } from '../services/tokenManager';
 import type { LoginCredentials } from '../types';
 
 export default function LoginPage() {
@@ -42,7 +41,7 @@ export default function LoginPage() {
     try {
       const authResponse = await AuthService.login(credentials);
 
-      tokenManager.setToken(authResponse.access_token);
+      AuthService.setToken(authResponse.access_token);
       const user = await AuthService.getCurrentUser();
 
       setAppState({

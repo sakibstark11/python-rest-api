@@ -15,12 +15,11 @@ import {
 import { useState } from 'react';
 import { useAppStore } from '../context/AppContext';
 import { EventService } from '../services/events';
-import type { Event, EventCreate } from '../types';
+import { ParticipantStatus, type Event, type EventCreate } from '../types';
 
 type FormData = EventCreate & {
   participant_input: string;
 };
-
 
 type EventModalProps =
   {
@@ -28,6 +27,13 @@ type EventModalProps =
     eventData?: Event;
     edit?: boolean;
   }
+
+const statusToChipMap = {
+  accepted: 'success',
+  declined: 'error',
+  pending: 'warning',
+  default: 'primary'
+}
 
 export default function CreateEventModal({ onClose, edit, eventData }: EventModalProps) {
   const [loading, setAppState] = useAppStore((state) => state.loading);
@@ -64,7 +70,9 @@ export default function CreateEventModal({ onClose, edit, eventData }: EventModa
     }
     return 'Create New Event'
   }
-  const handleResponse = async (status: 'accepted' | 'declined') => {
+
+  const handleResponse = async (
+    status: typeof ParticipantStatus.ACCEPTED | typeof ParticipantStatus.DECLINED) => {
     if (!eventData) return;
 
     setAppState({ loading: true });
@@ -77,7 +85,7 @@ export default function CreateEventModal({ onClose, edit, eventData }: EventModa
           return {
             ...event,
             participants: event.participants.map(p =>
-              p.user.id === eventData.participants.find(part => part.status === 'pending')?.user.id
+              p.user.id === eventData.participants.find(part => part.status === ParticipantStatus.PENDING)?.user.id
                 ? { ...p, status, responded_at: new Date().toISOString() }
                 : p
             )
@@ -155,11 +163,20 @@ export default function CreateEventModal({ onClose, edit, eventData }: EventModa
       sx={{
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center'
+        justifyContent: 'center',
+        '& .MuiModal-backdrop': {
+          backgroundColor: 'rgba(0, 0, 0, 0.5)'
+        },
+        '&:focus': {
+          outline: 'none'
+        },
+        '& > *': {
+          outline: 'none !important'
+        }
       }}
     >
-      <Container maxWidth="sm">
-        <Card>
+      <Container maxWidth="sm" sx={{ outline: 'none' }}>
+        <Card sx={{ outline: 'none' }}>
           <CardContent>
             <Grid display="flex" justifyContent="space-between" alignItems="center">
               <Typography variant="h6">{getHeaderText()}</Typography>
@@ -237,15 +254,17 @@ export default function CreateEventModal({ onClose, edit, eventData }: EventModa
 
               {formData.participant_emails.length > 0 && (
                 <Box>
-                  {formData.participant_emails.map((email) => (
-                    <Chip
+                  {formData.participant_emails.map((email) => {
+                    const color = eventData?.participants?.find(p => p.user.email === email)?.status ?? 'default'
+                    return <Chip
+                      color={statusToChipMap[color]}
                       key={email}
                       label={email}
                       onDelete={() => removeParticipant(email)}
                       size="small"
                       disabled={responseMode}
                     />
-                  ))}
+                  })}
                 </Box>
               )}
 
@@ -271,21 +290,21 @@ export default function CreateEventModal({ onClose, edit, eventData }: EventModa
                   </Box> :
                   <Box display="flex" gap={2} mt={3}>
                     <Button
-                      variant={userStatus === 'accepted' ? 'contained' : 'outlined'}
+                      variant={userStatus === ParticipantStatus.ACCEPTED ? 'contained' : 'outlined'}
                       color="success"
                       startIcon={<Check />}
-                      onClick={() => handleResponse('accepted')}
-                      disabled={loading || userStatus === 'accepted'}
+                      onClick={() => handleResponse(ParticipantStatus.ACCEPTED)}
+                      disabled={loading || userStatus === ParticipantStatus.ACCEPTED}
                       fullWidth
                     >
                       {loading ? 'Responding...' : 'Accept'}
                     </Button>
                     <Button
-                      variant={userStatus === 'declined' ? 'contained' : 'outlined'}
+                      variant={userStatus === ParticipantStatus.DECLINED ? 'contained' : 'outlined'}
                       color="error"
                       startIcon={<Clear />}
-                      onClick={() => handleResponse('declined')}
-                      disabled={loading || userStatus === 'declined'}
+                      onClick={() => handleResponse(ParticipantStatus.DECLINED)}
+                      disabled={loading || userStatus === ParticipantStatus.DECLINED}
                       fullWidth
                     >
                       {loading ? 'Responding...' : 'Decline'}

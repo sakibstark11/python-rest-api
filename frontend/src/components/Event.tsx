@@ -164,14 +164,8 @@ export default function CreateEventModal({ onClose, edit, eventData }: EventModa
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        '& .MuiModal-backdrop': {
-          backgroundColor: 'rgba(0, 0, 0, 0.5)'
-        },
         '&:focus': {
           outline: 'none'
-        },
-        '& > *': {
-          outline: 'none !important'
         }
       }}
     >

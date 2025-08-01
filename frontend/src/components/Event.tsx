@@ -12,6 +12,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import moment from 'moment';
 import { useState } from 'react';
 import { useAppStore } from '../context/AppContext';
 import { EventService } from '../services/events';
@@ -33,7 +34,7 @@ const statusToChipMap = {
   declined: 'error',
   pending: 'warning',
   default: 'primary'
-}
+} as const
 
 export default function CreateEventModal({ onClose, edit, eventData }: EventModalProps) {
   const [loading, setAppState] = useAppStore((state) => state.loading);
@@ -43,14 +44,10 @@ export default function CreateEventModal({ onClose, edit, eventData }: EventModa
     title: eventData?.title || '',
     description: eventData?.description || '',
     start_time: eventData
-      ? new Date(new Date(eventData.start_time).getTime() - new Date().getTimezoneOffset() * 60000)
-        .toISOString()
-        .slice(0, 16)
+      ? moment(eventData.start_time).local().format('YYYY-MM-DDTHH:mm')
       : '',
     end_time: eventData
-      ? new Date(new Date(eventData.end_time).getTime() - new Date().getTimezoneOffset() * 60000)
-        .toISOString()
-        .slice(0, 16)
+      ? moment(eventData.end_time).local().format('YYYY-MM-DDTHH:mm')
       : '',
     location: eventData?.location || '',
     participant_emails: eventData?.participants?.map(p => p.user.email) || [],
@@ -209,7 +206,11 @@ export default function CreateEventModal({ onClose, edit, eventData }: EventModa
                 onChange={handleChange('start_time')}
                 margin="normal"
                 required
-                InputLabelProps={{ shrink: true }}
+                slotProps={{
+                  inputLabel: {
+                    shrink: true,
+                  },
+                }}
                 disabled={responseMode}
               />
 
@@ -221,7 +222,11 @@ export default function CreateEventModal({ onClose, edit, eventData }: EventModa
                 onChange={handleChange('end_time')}
                 margin="normal"
                 required
-                InputLabelProps={{ shrink: true }}
+                slotProps={{
+                  inputLabel: {
+                    shrink: true,
+                  },
+                }}
                 disabled={responseMode}
               />
 

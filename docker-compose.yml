@@ -1,5 +1,6 @@
 services:
-  db:
+  database:
+    container_name: database
     image: postgres:15
     environment:
       POSTGRES_DB: calendar_db
@@ -15,7 +16,8 @@ services:
       timeout: 10s
       retries: 3
 
-  api:
+  backend:
+    container_name: backend
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -23,7 +25,7 @@ services:
     ports:
       - "${API_PORT}:${API_PORT}"
     environment:
-      - DATABASE_URL=postgresql+asyncpg://user:password@db:5432/calendar_db
+      - DATABASE_URL=postgresql+asyncpg://user:password@database:5432/calendar_db
       - SECRET_KEY=${SECRET_KEY}
       - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES}
       - REFRESH_TOKEN_EXPIRE_DAYS=${REFRESH_TOKEN_EXPIRE_DAYS}
@@ -32,12 +34,14 @@ services:
       - INSTALL_EXTRAS=${INSTALL_EXTRAS}
       - PORT=${API_PORT}
     depends_on:
-      db:
+      database:
         condition: service_healthy
     volumes:
       - ${VOLUME_MOUNT}
     restart: unless-stopped
+
   frontend:
+    container_name: frontend
     build:
       context: ./frontend
       dockerfile: Dockerfile
@@ -48,9 +52,20 @@ services:
       - PORT=${FRONTEND_PORT}
       - VITE_API_BASE_URL=${VITE_API_BASE_URL}
     depends_on:
-      - api
+      - backend
     volumes:
       - ${VOLUME_MOUNT}
+
+  development:
+    container_name: development
+    command: sleep infinity
+    env_file: .env
+    build:
+      context: .
+      dockerfile: Dockerfile
+    working_dir: /app
+    volumes:
+      - .:/app
 
 volumes:
   postgres_data:

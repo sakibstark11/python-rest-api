@@ -3,6 +3,8 @@ import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAppStore } from '../context/AppContext';
 import { AuthService } from '../services/auth';
+import logger from '../utils/logger';
+import axios from 'axios';
 
 type ProtectedRouteProps = {
   children: React.ReactNode;
@@ -33,6 +35,16 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
           setAppState({ loading: false });
         }
       } catch (error) {
+        if (axios.isAxiosError(error)) {
+          const requestId = error.response?.headers?.['x-request-id'];
+          logger.error({ 
+            message: 'Failed to get current user', 
+            error: error.response?.data?.error?.message || error.message,
+            request_id: requestId,
+          });
+        } else {
+          logger.error({ message: 'Failed to get current user', error });
+        }
         setAppState({ loading: false });
       } finally {
         setHasCheckedAuth(true);

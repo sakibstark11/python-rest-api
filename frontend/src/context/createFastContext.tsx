@@ -6,7 +6,7 @@ export default function createFastContext<Store>(initialState: Store) {
     get: () => Store;
     set: (value: Partial<Store>) => void;
     subscribe: (callback: () => void) => () => void;
-  } {
+    } {
     const store = useRef(initialState);
 
     const get = useCallback(() => store.current, []);
@@ -52,20 +52,21 @@ export default function createFastContext<Store>(initialState: Store) {
   function useStore(): [(value: Partial<Store>) => void];
 
   function useStore<SelectorOutput>(
-    selector?: (store: Store) => SelectorOutput
+    selector?: (store: Store) => SelectorOutput,
   ): [SelectorOutput, (value: Partial<Store>) => void] | [(value: Partial<Store>) => void] {
     const store = useContext(StoreContext);
     if (!store) {
-      throw new Error("Store not found");
+      throw new Error('Store not found');
     }
 
     if (selector) {
+      // eslint-disable-next-line react-hooks/rules-of-hooks
       const state = useSyncExternalStore(
         store.subscribe,
         () => selector(store.get()),
-        () => selector(initialState)
+        () => selector(initialState),
       );
-      return [state, store.set]
+      return [state, store.set];
     }
     return [store.set];
   }

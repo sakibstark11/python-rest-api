@@ -20,7 +20,7 @@ export const ParticipantStatus = {
   ACCEPTED: 'accepted',
   DECLINED: 'declined',
   PENDING: 'pending',
-} as const
+} as const;
 
 export type ParticipantResponse = {
   user: UserInfo;

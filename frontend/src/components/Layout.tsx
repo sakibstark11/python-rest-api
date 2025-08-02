@@ -2,7 +2,7 @@ import { Paper } from '@mui/material';
 import React from 'react';
 import TopBar from './TopBar';
 
-interface LayoutProps {
+type LayoutProps = {
   children: React.ReactNode;
 }
 
@@ -18,7 +18,7 @@ export default function Layout({ children }: LayoutProps) {
           borderRadius: 0,
           alignItems: 'center',
           display: 'flex',
-          p: 2
+          p: 2,
         }}
       >
         {children}

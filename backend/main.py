@@ -1,5 +1,6 @@
 from api.v1.router import api_router
 from core.exceptions import setup_exception_handlers
+from core.middleware import RequestIDMiddleware
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -17,6 +18,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.add_middleware(RequestIDMiddleware)
 
 setup_exception_handlers(app)
 

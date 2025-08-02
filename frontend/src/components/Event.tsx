@@ -17,6 +17,7 @@ import { useState } from 'react';
 import { useAppStore } from '../context/AppContext';
 import { EventService } from '../services/events';
 import { ParticipantStatus, type Event, type EventCreate } from '../types';
+import logger from '../utils/logger';
 
 type FormData = EventCreate & {
   participant_input: string;
@@ -33,8 +34,8 @@ const statusToChipMap = {
   accepted: 'success',
   declined: 'error',
   pending: 'warning',
-  default: 'primary'
-} as const
+  default: 'primary',
+} as const;
 
 export default function CreateEventModal({ onClose, edit, eventData }: EventModalProps) {
   const [loading, setAppState] = useAppStore((state) => state.loading);
@@ -53,20 +54,20 @@ export default function CreateEventModal({ onClose, edit, eventData }: EventModa
     participant_emails: eventData?.participants?.map(p => p.user.email) || [],
     participant_input: '',
   }));
-  const responseMode = !edit && !!eventData
+  const responseMode = !edit && !!eventData;
 
   const userParticipation = eventData?.participants?.find(p => p.user.id === currentUser?.id);
   const userStatus = userParticipation?.status;
 
   const getHeaderText = () => {
     if (edit) {
-      return 'Edit Event'
+      return 'Edit Event';
     }
     if (responseMode) {
-      return 'Respond to Event'
+      return 'Respond to Event';
     }
-    return 'Create New Event'
-  }
+    return 'Create New Event';
+  };
 
   const handleResponse = async (
     status: typeof ParticipantStatus.ACCEPTED | typeof ParticipantStatus.DECLINED) => {
@@ -84,8 +85,8 @@ export default function CreateEventModal({ onClose, edit, eventData }: EventModa
             participants: event.participants.map(p =>
               p.user.id === eventData.participants.find(part => part.status === ParticipantStatus.PENDING)?.user.id
                 ? { ...p, status, responded_at: new Date().toISOString() }
-                : p
-            )
+                : p,
+            ),
           };
         }
         return event;
@@ -94,6 +95,7 @@ export default function CreateEventModal({ onClose, edit, eventData }: EventModa
       setAppState({ events: updatedEvents });
       onClose();
     } catch (error) {
+      logger.error({ message: 'Failed to respond to event', error });
       setAppState({ error: 'Failed to respond to event' });
     } finally {
       setAppState({ loading: false });
@@ -101,7 +103,7 @@ export default function CreateEventModal({ onClose, edit, eventData }: EventModa
   };
 
   const handleChange = (field: keyof FormData) => (
-    e: React.ChangeEvent<HTMLInputElement>
+    e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     setFormData({ ...formData, [field]: e.target.value });
   };
@@ -109,7 +111,7 @@ export default function CreateEventModal({ onClose, edit, eventData }: EventModa
   const removeParticipant = (emailToRemove: string) => {
     setFormData({
       ...formData,
-      participant_emails: formData.participant_emails.filter(email => email !== emailToRemove)
+      participant_emails: formData.participant_emails.filter(email => email !== emailToRemove),
     });
   };
 
@@ -121,7 +123,7 @@ export default function CreateEventModal({ onClose, edit, eventData }: EventModa
         setFormData({
           ...formData,
           participant_emails: [...formData.participant_emails, email],
-          participant_input: ''
+          participant_input: '',
         });
       }
     }
@@ -132,14 +134,14 @@ export default function CreateEventModal({ onClose, edit, eventData }: EventModa
     setAppState({ loading: true });
 
     try {
-      const { participant_input, ...rest } = formData;
+      const { participant_emails: _p, ...rest } = formData;
 
       if (edit && eventData) {
         const updatedEvent = await EventService.updateEvent(eventData.id, rest);
         setAppState({
           events: previousEvents.map(event =>
-            event.id === updatedEvent.id ? updatedEvent : event
-          )
+            event.id === updatedEvent.id ? updatedEvent : event,
+          ),
         });
       } else {
         const newEvent = await EventService.createEvent(rest);
@@ -147,11 +149,12 @@ export default function CreateEventModal({ onClose, edit, eventData }: EventModa
       }
       onClose();
     } catch (error) {
+      logger.error({ message: 'Failed to create event', error });
       setAppState({ error: 'Failed to create event' });
     } finally {
-      setAppState({ loading: false })
+      setAppState({ loading: false });
     };
-  }
+  };
 
   return (
     <Modal
@@ -162,8 +165,8 @@ export default function CreateEventModal({ onClose, edit, eventData }: EventModa
         alignItems: 'center',
         justifyContent: 'center',
         '&:focus': {
-          outline: 'none'
-        }
+          outline: 'none',
+        },
       }}
     >
       <Container maxWidth="sm" sx={{ outline: 'none' }}>
@@ -254,7 +257,7 @@ export default function CreateEventModal({ onClose, edit, eventData }: EventModa
               {formData.participant_emails.length > 0 && (
                 <Box>
                   {formData.participant_emails.map((email) => {
-                    const color = eventData?.participants?.find(p => p.user.email === email)?.status ?? 'default'
+                    const color = eventData?.participants?.find(p => p.user.email === email)?.status ?? 'default';
                     return <Chip
                       color={statusToChipMap[color]}
                       key={email}
@@ -262,7 +265,7 @@ export default function CreateEventModal({ onClose, edit, eventData }: EventModa
                       onDelete={() => removeParticipant(email)}
                       size="small"
                       disabled={responseMode}
-                    />
+                    />;
                   })}
                 </Box>
               )}

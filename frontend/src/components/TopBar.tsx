@@ -6,12 +6,14 @@ import {
   Menu,
   MenuItem,
   Toolbar,
-  Typography
+  Typography,
 } from '@mui/material';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '../context/AppContext';
 import { AuthService } from '../services/auth';
+import logger from '../utils/logger';
+import axios from 'axios';
 
 export default function TopBar() {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -35,16 +37,26 @@ export default function TopBar() {
         user: null,
         accessToken: null,
         events: [],
-        error: null
+        error: null,
       });
       navigate('/login');
     } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const requestId = error.response?.headers?.['x-request-id'];
+        logger.error({ 
+          message: 'Failed to logout', 
+          error: error.response?.data?.error?.message || error.message,
+          request_id: requestId,
+        });
+      } else {
+        logger.error({ message: 'Failed to logout', error });
+      }
       AuthService.removeToken();
       setAppState({
         user: null,
         accessToken: null,
         events: [],
-        error: null
+        error: null,
       });
       navigate('/login');
     }

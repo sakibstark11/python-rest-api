@@ -5,6 +5,8 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 
+from .logger import root_logger
+
 
 class ErrorCode(str, Enum):
     VALIDATION_ERROR = "VALIDATION_ERROR"
@@ -34,7 +36,13 @@ class CustomHTTPException(HTTPException):
         self.error_code = error_code
 
 
-async def custom_http_exception_handler(_: Request, exc: CustomHTTPException):
+async def custom_http_exception_handler(request: Request, exc: CustomHTTPException):
+    root_logger.error("Custom HTTP exception", extra={
+        "error_code": exc.error_code.value,
+        "detail": exc.detail,
+        "status_code": exc.status_code,
+        "path": str(request.url)
+    })
     return JSONResponse(
         status_code=exc.status_code,
         content={
@@ -46,7 +54,12 @@ async def custom_http_exception_handler(_: Request, exc: CustomHTTPException):
     )
 
 
-async def generic_http_exception_handler(_, exc: HTTPException):
+async def generic_http_exception_handler(request: Request, exc: HTTPException):
+    root_logger.error("HTTP exception", extra={
+        "detail": exc.detail,
+        "status_code": exc.status_code,
+        "path": str(request.url)
+    })
     return JSONResponse(
         status_code=exc.status_code,
         content={
@@ -58,7 +71,11 @@ async def generic_http_exception_handler(_, exc: HTTPException):
     )
 
 
-async def validation_exception_handler(_, exc: ValidationError):
+async def validation_exception_handler(request: Request, exc: ValidationError):
+    root_logger.error("Validation error", extra={
+        "errors": exc.errors(),
+        "path": str(request.url)
+    })
     return JSONResponse(
         status_code=422,
         content={
@@ -71,7 +88,12 @@ async def validation_exception_handler(_, exc: ValidationError):
     )
 
 
-async def internal_error_handler(_, exc: Exception):
+async def internal_error_handler(request: Request, exc: Exception):
+    root_logger.error("Internal server error", extra={
+        "error": str(exc),
+        "type": type(exc).__name__,
+        "path": str(request.url)
+    }, exc_info=True)
     return JSONResponse(
         status_code=500,
         content={

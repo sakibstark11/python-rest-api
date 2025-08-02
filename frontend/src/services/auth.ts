@@ -1,5 +1,6 @@
 import axios from 'axios';
 import type { AuthResponse, LoginCredentials, SignupData, User } from '../types';
+import { logAxiosError } from '../utils/errorLogger';
 
 class TokenManager {
   private currentToken: string | null = null;
@@ -50,7 +51,7 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     return Promise.reject(error);
-  }
+  },
 );
 
 export class AuthService {
@@ -67,13 +68,23 @@ export class AuthService {
   }
 
   static async login(credentials: LoginCredentials): Promise<AuthResponse> {
-    const response = await api.post('/auth/login', credentials);
-    return response.data;
+    try {
+      const response = await api.post('/auth/login', credentials);
+      return response.data;
+    } catch (error) {
+      logAxiosError(error, 'login');
+      throw error;
+    }
   }
 
   static async refreshToken(): Promise<AuthResponse> {
-    const response = await api.post('/auth/refresh');
-    return response.data;
+    try {
+      const response = await api.post('/auth/refresh');
+      return response.data;
+    } catch (error) {
+      logAxiosError(error, 'refresh token');
+      throw error;
+    }
   }
 
   static async initializeAuth(): Promise<{ user: User; accessToken: string } | null> {
@@ -86,28 +97,40 @@ export class AuthService {
         accessToken: authResponse.access_token,
       };
     } catch (error) {
+      logAxiosError(error, 'initialize auth');
       return null;
     }
   }
 
   static async signup(userData: SignupData): Promise<User> {
-    const response = await axios.post('/auth/register', userData);
-    return response.data;
+    try {
+      const response = await axios.post('/auth/register', userData);
+      return response.data;
+    } catch (error) {
+      logAxiosError(error, 'signup');
+      throw error;
+    }
   }
 
   static async getCurrentUser(token?: string): Promise<User> {
-    if (token) {
-      this.setToken(token);
+    try {
+      if (token) {
+        this.setToken(token);
+      }
+
+      const response = await api.get('/auth/me');
+      return response.data;
+    } catch (error) {
+      logAxiosError(error, 'get current user');
+      throw error;
     }
-    
-    const response = await api.get('/auth/me');
-    return response.data;
   }
 
   static async logout(): Promise<void> {
     try {
       await api.post('/auth/logout');
     } catch (error) {
+      logAxiosError(error, 'logout');
     }
   }
 

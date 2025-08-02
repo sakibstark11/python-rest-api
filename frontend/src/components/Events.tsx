@@ -8,8 +8,12 @@ import { EventService } from '../services/events';
 import type { Event } from '../types';
 import EventModal from './Event';
 import './styles/calendar.scss';
+import logger from '../utils/logger';
+import axios from 'axios';
 
 const localizer = momentLocalizer(moment);
+const defaultView = Views.WEEK;
+
 
 export default function WeeklyEvents() {
   const [events, setAppState] = useAppStore(state => state.events);
@@ -18,8 +22,6 @@ export default function WeeklyEvents() {
   const [selectedEvent, setSelectedEvent] = useState<Event | undefined>();
   const theme = useTheme();
 
-  const defaultView = Views.WEEK;
-
   const fetchEventsInRange = async (centerDate: Date,
     view: typeof Views.DAY | typeof Views.MONTH | typeof Views.WEEK) => {
     const start = moment(centerDate).startOf(view).toISOString();
@@ -27,7 +29,17 @@ export default function WeeklyEvents() {
     try {
       const result = await EventService.getEvents(start, end);
       setAppState({ events: result });
-    } catch {
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const requestId = error.response?.headers?.['x-request-id'];
+        logger.error({ 
+          message: 'Failed to fetch events', 
+          error: error.response?.data?.error?.message || error.message,
+          request_id: requestId,
+        });
+      } else {
+        logger.error({ message: 'Failed to fetch events', error });
+      }
       setAppState({ error: 'Failed to fetch events' });
     }
   };
@@ -42,7 +54,7 @@ export default function WeeklyEvents() {
     title: event.title,
     start: new Date(event.start_time),
     end: new Date(event.end_time),
-    resource: event
+    resource: event,
   }));
 
   return (

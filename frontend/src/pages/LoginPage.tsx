@@ -7,13 +7,14 @@ import {
   CircularProgress,
   Container,
   TextField,
-  Typography
+  Typography,
 } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '../context/AppContext';
 import { AuthService } from '../services/auth';
 import type { LoginCredentials } from '../types';
+import logger from '../utils/logger';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -51,6 +52,16 @@ export default function LoginPage() {
       });
       navigate('/');
     } catch (error: any) {
+      if (axios.isAxiosError(error)) {
+        const requestId = error.response?.headers?.['x-request-id'];
+        logger.error({ 
+          message: 'Login failed', 
+          error: error.response?.data?.error?.message || error.message,
+          request_id: requestId,
+        });
+      } else {
+        logger.error({ message: 'Login failed', error });
+      }
       setAppState({
         loading: false,
         error: error.response?.data?.message || 'Login failed',
@@ -59,7 +70,7 @@ export default function LoginPage() {
   };
 
   const handleChange = (field: keyof LoginCredentials) => (
-    e: React.ChangeEvent<HTMLInputElement>
+    e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     setCredentials({ ...credentials, [field]: e.target.value });
   };

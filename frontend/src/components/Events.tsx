@@ -9,7 +9,6 @@ import type { Event } from '../types';
 import EventModal from './Event';
 import './styles/calendar.scss';
 import logger from '../utils/logger';
-import axios from 'axios';
 
 const localizer = momentLocalizer(moment);
 const defaultView = Views.WEEK;
@@ -30,16 +29,7 @@ export default function WeeklyEvents() {
       const result = await EventService.getEvents(start, end);
       setAppState({ events: result });
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const requestId = error.response?.headers?.['x-request-id'];
-        logger.error({ 
-          message: 'Failed to fetch events', 
-          error: error.response?.data?.error?.message || error.message,
-          request_id: requestId,
-        });
-      } else {
-        logger.error({ message: 'Failed to fetch events', error });
-      }
+      logger.error({ message: 'Failed to fetch events', error });
       setAppState({ error: 'Failed to fetch events' });
     }
   };

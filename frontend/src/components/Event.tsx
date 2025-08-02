@@ -134,17 +134,15 @@ export default function CreateEventModal({ onClose, edit, eventData }: EventModa
     setAppState({ loading: true });
 
     try {
-      const { participant_emails: _p, ...rest } = formData;
-
       if (edit && eventData) {
-        const updatedEvent = await EventService.updateEvent(eventData.id, rest);
+        const updatedEvent = await EventService.updateEvent(eventData.id, formData);
         setAppState({
           events: previousEvents.map(event =>
             event.id === updatedEvent.id ? updatedEvent : event,
           ),
         });
       } else {
-        const newEvent = await EventService.createEvent(rest);
+        const newEvent = await EventService.createEvent(formData);
         setAppState({ events: [...previousEvents, newEvent] });
       }
       onClose();

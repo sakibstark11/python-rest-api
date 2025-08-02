@@ -58,7 +58,6 @@ def setup_logger(
 
     handler.setFormatter(formatter)
 
-    # Add handler to logger
     logger.addHandler(handler)
 
     return logger

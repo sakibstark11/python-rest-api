@@ -52,16 +52,8 @@ export default function LoginPage() {
       });
       navigate('/');
     } catch (error: any) {
-      if (axios.isAxiosError(error)) {
-        const requestId = error.response?.headers?.['x-request-id'];
-        logger.error({ 
-          message: 'Login failed', 
-          error: error.response?.data?.error?.message || error.message,
-          request_id: requestId,
-        });
-      } else {
-        logger.error({ message: 'Login failed', error });
-      }
+      logger.error({ message: 'Login failed', error });
+      
       setAppState({
         loading: false,
         error: error.response?.data?.message || 'Login failed',

@@ -14,7 +14,7 @@ import {
 } from '@mui/material';
 import moment from 'moment';
 import { useState } from 'react';
-import { useAppStore } from '../context/AppContext';
+import { useStore } from '../context/AppContext';
 import { EventService } from '../services/events';
 import { ParticipantStatus, type Event, type EventCreate } from '../types';
 import logger from '../utils/logger';
@@ -38,9 +38,9 @@ const statusToChipMap = {
 } as const;
 
 export default function CreateEventModal({ onClose, edit, eventData }: EventModalProps) {
-  const [loading, setAppState] = useAppStore((state) => state.loading);
-  const [previousEvents] = useAppStore((state) => state.events);
-  const [currentUser] = useAppStore((state) => state.user);
+  const [loading, setAppState] = useStore((state) => state.loading);
+  const [previousEvents] = useStore((state) => state.events);
+  const [currentUser] = useStore((state) => state.user);
   const [formData, setFormData] = useState<FormData>(() => ({
     title: eventData?.title || '',
     description: eventData?.description || '',
@@ -151,7 +151,7 @@ export default function CreateEventModal({ onClose, edit, eventData }: EventModa
       setAppState({ error: 'Failed to create event' });
     } finally {
       setAppState({ loading: false });
-    };
+    }
   };
 
   return (

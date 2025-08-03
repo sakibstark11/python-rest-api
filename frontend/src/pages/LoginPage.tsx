@@ -11,7 +11,7 @@ import {
 } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAppStore } from '../context/AppContext';
+import { useStore } from '../context/AppContext';
 import { AuthService } from '../services/auth';
 import type { LoginCredentials } from '../types';
 import logger from '../utils/logger';
@@ -22,9 +22,9 @@ export default function LoginPage() {
     email: '',
     password: '',
   });
-  const [accessToken, setAppState] = useAppStore((state) => state.accessToken);
-  const [loading] = useAppStore((state) => state.loading);
-  const [error] = useAppStore((state) => state.error);
+  const [accessToken, setAppState] = useStore((state) => state.accessToken);
+  const [loading] = useStore((state) => state.loading);
+  const [error] = useStore((state) => state.error);
 
   useEffect(() => {
     if (accessToken && AuthService.isTokenValid(accessToken)) {
@@ -32,7 +32,7 @@ export default function LoginPage() {
     } else {
       setAppState({ user: null, accessToken: null, events: [], error: null, loading: false });
     }
-  }, []);
+  }, [accessToken, navigate, setAppState]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,12 +51,12 @@ export default function LoginPage() {
         loading: false,
       });
       navigate('/');
-    } catch (error: any) {
+    } catch (error) {
       logger.error({ message: 'Login failed', error });
       
       setAppState({
         loading: false,
-        error: error.response?.data?.message || 'Login failed',
+        error: 'Login failed',
       });
     }
   };

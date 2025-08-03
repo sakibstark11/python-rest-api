@@ -10,13 +10,13 @@ import {
 } from '@mui/material';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAppStore } from '../context/AppContext';
+import { useStore } from '../context/AppContext';
 import { AuthService } from '../services/auth';
 import logger from '../utils/logger';
 
 export default function TopBar() {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [email, setAppState] = useAppStore(state => state.user?.email);
+  const [email, setAppState] = useStore(state => state.user?.email);
   const navigate = useNavigate();
   const open = Boolean(anchorEl);
 

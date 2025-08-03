@@ -1,8 +1,6 @@
 import axios from 'axios';
 import type { LoginCredentials, SignupData, User } from '../types';
 import { logAxiosError } from '../utils/errorLogger';
-import logger from '../utils/logger';
-
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
@@ -103,12 +101,8 @@ export class AuthService {
     }
   }
 
-  static async getCurrentUser(token?: string): Promise<User> {
+  static async getCurrentUser(): Promise<User> {
     try {
-      if (token) {
-        this.setToken(token);
-      }
-
       const response = await api.get('/auth/me');
       return response.data;
     } catch (error) {

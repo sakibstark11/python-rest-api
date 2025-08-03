@@ -3,7 +3,7 @@ import { Box, Fab, useTheme } from '@mui/material';
 import moment from 'moment';
 import { useCallback, useEffect, useState } from 'react';
 import { Calendar, momentLocalizer, Views } from 'react-big-calendar';
-import { useAppStore } from '../context/AppContext';
+import { useStore } from '../context/AppContext';
 import { EventService } from '../services/events';
 import type { Event } from '../types';
 import EventModal from './Event';
@@ -13,30 +13,46 @@ import logger from '../utils/logger';
 const localizer = momentLocalizer(moment);
 const defaultView = Views.WEEK;
 
+const today = new Date();
+let currentStartDate: Date = moment(today).startOf(defaultView).toDate();
+let currentEndDate: Date = moment(today).endOf(defaultView).toDate();
+let currentView: string = defaultView;
+
 
 export default function WeeklyEvents() {
-  const [events, setAppState] = useAppStore(state => state.events);
-  const [userId] = useAppStore(state => state.user?.id);
+  const [events, setAppState] = useStore(state => state.events);
+  const [userId] = useStore(state => state.user?.id);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | undefined>();
   const theme = useTheme();
 
-  const fetchEventsInRange = useCallback(async (centerDate: Date,
-    view: typeof Views.DAY | typeof Views.MONTH | typeof Views.WEEK) => {
-    const start = moment(centerDate).startOf(view).toISOString();
-    const end = moment(centerDate).endOf(view).toISOString();
+  const fetchEventsInRange = useCallback(async (centerDate: Date, view: typeof Views.DAY | typeof Views.MONTH | typeof Views.WEEK) => {
+    const start = moment(centerDate).startOf(view).toDate();
+    const end = moment(centerDate).endOf(view).toDate();
+
+    if (currentView === view && start >= currentStartDate && end <= currentEndDate) {
+      return;
+    }
+
+    // Update tracking variables
+    currentStartDate = start;
+    currentEndDate = end;
+    currentView = view;
+
     try {
-      const result = await EventService.getEvents(start, end);
+      const result = await EventService.getEvents(
+        moment(start).toISOString(),
+        moment(end).toISOString(),
+      );
       setAppState({ events: result });
     } catch (error) {
       logger.error({ message: 'Failed to fetch events', error });
       setAppState({ error: 'Failed to fetch events' });
     }
-  },[setAppState]);
+  }, [setAppState]);
 
   useEffect(() => {
-    const defaultDate = new Date();
-    fetchEventsInRange(defaultDate, defaultView);
+    fetchEventsInRange(today, defaultView);
   }, [fetchEventsInRange]);
 
   const calendarEvents = events.map(event => ({
@@ -88,7 +104,9 @@ export default function WeeklyEvents() {
           toolbar
           style={{ height: '100%', width: '100%', overflow: 'auto' }}
           onNavigate={(date, view) => {
-            fetchEventsInRange(date, view);
+            if (view !== Views.AGENDA && view !== Views.WORK_WEEK) {
+              fetchEventsInRange(date, view);
+            }
           }}
 
           onSelectEvent={event => {

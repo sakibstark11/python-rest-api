@@ -2,10 +2,9 @@ import { createTheme, ThemeProvider, CssBaseline } from '@mui/material';
 import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
-import { AppProvider } from './context/AppContext';
+import AppContext from './context/AppContext';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
-import logger from './utils/logger';
 
 const darkTheme = createTheme({
   palette: {
@@ -15,7 +14,7 @@ const darkTheme = createTheme({
 
 function App() {
   return (
-    <AppProvider>
+    <AppContext>
       <Router>
         <ThemeProvider theme={darkTheme}>
           <CssBaseline />
@@ -34,7 +33,7 @@ function App() {
           </Layout>
         </ThemeProvider>
       </Router>
-    </AppProvider>
+    </AppContext>
   );
 }
 

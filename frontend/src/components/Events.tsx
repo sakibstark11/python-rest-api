@@ -1,7 +1,7 @@
 import { Add } from '@mui/icons-material';
 import { Box, Fab, useTheme } from '@mui/material';
 import moment from 'moment';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Calendar, momentLocalizer, Views } from 'react-big-calendar';
 import { useAppStore } from '../context/AppContext';
 import { EventService } from '../services/events';
@@ -21,7 +21,7 @@ export default function WeeklyEvents() {
   const [selectedEvent, setSelectedEvent] = useState<Event | undefined>();
   const theme = useTheme();
 
-  const fetchEventsInRange = async (centerDate: Date,
+  const fetchEventsInRange = useCallback(async (centerDate: Date,
     view: typeof Views.DAY | typeof Views.MONTH | typeof Views.WEEK) => {
     const start = moment(centerDate).startOf(view).toISOString();
     const end = moment(centerDate).endOf(view).toISOString();
@@ -32,12 +32,12 @@ export default function WeeklyEvents() {
       logger.error({ message: 'Failed to fetch events', error });
       setAppState({ error: 'Failed to fetch events' });
     }
-  };
+  },[setAppState]);
 
   useEffect(() => {
     const defaultDate = new Date();
     fetchEventsInRange(defaultDate, defaultView);
-  }, []);
+  }, [fetchEventsInRange]);
 
   const calendarEvents = events.map(event => ({
     id: event.id,
@@ -87,9 +87,10 @@ export default function WeeklyEvents() {
           step={60}
           toolbar
           style={{ height: '100%', width: '100%', overflow: 'auto' }}
-          // onNavigate={(date) => {
-          //   fetchEventsInRange(date, defaultView);
-          // }}
+          onNavigate={(date, view) => {
+            fetchEventsInRange(date, view);
+          }}
+
           onSelectEvent={event => {
             setModalOpen(true);
             setSelectedEvent(event.resource);

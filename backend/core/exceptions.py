@@ -41,7 +41,7 @@ async def custom_http_exception_handler(request: Request, exc: CustomHTTPExcepti
         "error_code": exc.error_code.value,
         "detail": exc.detail,
         "status_code": exc.status_code,
-        "path": str(request.url)
+        "path": request.url.path
     })
     return JSONResponse(
         status_code=exc.status_code,
@@ -58,7 +58,7 @@ async def generic_http_exception_handler(request: Request, exc: HTTPException):
     root_logger.error("HTTP exception", extra={
         "detail": exc.detail,
         "status_code": exc.status_code,
-        "path": str(request.url)
+        "path": request.url.path
     })
     return JSONResponse(
         status_code=exc.status_code,
@@ -74,7 +74,7 @@ async def generic_http_exception_handler(request: Request, exc: HTTPException):
 async def validation_exception_handler(request: Request, exc: ValidationError):
     root_logger.error("Validation error", extra={
         "errors": exc.errors(),
-        "path": str(request.url)
+        "path": request.url.path
     })
     return JSONResponse(
         status_code=422,
@@ -92,7 +92,7 @@ async def internal_error_handler(request: Request, exc: Exception):
     root_logger.error("Internal server error", extra={
         "error": str(exc),
         "type": type(exc).__name__,
-        "path": str(request.url)
+        "path": request.url.path
     }, exc_info=True)
     return JSONResponse(
         status_code=500,

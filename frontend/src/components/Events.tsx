@@ -3,7 +3,7 @@ import { Box, Fab, useTheme } from '@mui/material';
 import moment from 'moment';
 import { useCallback, useEffect, useState } from 'react';
 import { Calendar, momentLocalizer, Views } from 'react-big-calendar';
-import { useStore } from '../context/AppContext';
+import { useStore } from './hooks/useStore';
 import { EventService } from '../services/events';
 import type { Event } from '../types';
 import EventModal from './Event';
@@ -26,7 +26,7 @@ export default function WeeklyEvents() {
   const [selectedEvent, setSelectedEvent] = useState<Event | undefined>();
   const theme = useTheme();
 
-  const fetchEventsInRange = useCallback(async (centerDate: Date, view: typeof Views.DAY | typeof Views.MONTH | typeof Views.WEEK) => {
+  const fetchEventsInRange = useCallback(async (centerDate: Date, view: typeof Views.DAY | typeof Views.MONTH | typeof Views.WEEK) => {  
     const start = moment(centerDate).startOf(view).toDate();
     const end = moment(centerDate).endOf(view).toDate();
 
@@ -40,6 +40,8 @@ export default function WeeklyEvents() {
     currentView = view;
 
     try {
+      setAppState({ loading: true });
+
       const result = await EventService.getEvents(
         moment(start).toISOString(),
         moment(end).toISOString(),
@@ -48,6 +50,9 @@ export default function WeeklyEvents() {
     } catch (error) {
       logger.error({ message: 'Failed to fetch events', error });
       setAppState({ error: 'Failed to fetch events' });
+    }
+    finally {
+      setAppState({ loading: false });
     }
   }, [setAppState]);
 

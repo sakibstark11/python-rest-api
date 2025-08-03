@@ -1,7 +1,6 @@
-import { Box, CircularProgress } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { useStore } from '../context/AppContext';
+import { useStore } from './hooks/useStore';
 import { AuthService } from '../services/auth';
 import logger from '../utils/logger';
 
@@ -10,7 +9,7 @@ type ProtectedRouteProps = {
 }
 
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const [{ user, accessToken, loading }, setAppState] = useStore((state) => (state));
+  const [{ user, accessToken }, setAppState] = useStore((state) => (state));
   const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
 
   useEffect(() => {
@@ -44,12 +43,8 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
     tryInitializeAuth();
   }, [accessToken, setAppState, user]);
 
-  if (loading || !hasCheckedAuth) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center">
-        <CircularProgress />
-      </Box>
-    );
+  if (!hasCheckedAuth) {
+    return null;
   }
 
   if (!user || !accessToken) {

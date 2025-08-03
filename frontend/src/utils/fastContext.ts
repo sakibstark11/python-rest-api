@@ -1,23 +1,49 @@
-export function store<Store>(initialState: Store): {
+import { useRef, useCallback, createContext } from 'react';
+import type { User, Event } from '../types';
+
+export type AppState = {
+  user: User | null;
+  events: Event[];
+  loading: boolean;
+  error: string | null;
+  accessToken: string | null;
+};
+
+export const initialState: AppState = {
+  user: null,
+  events: [],
+  loading: false,
+  error: null,
+  accessToken: null,
+};
+
+type StoreApi = {
+  get: () => AppState;
+  set: (value: Partial<AppState>) => void;
+  subscribe: (callback: () => void) => () => void;
+};
+
+export const StoreContext = createContext<StoreApi | null>(null);
+
+export function Store<Store>(initialState: Store): {
   get: () => Store;
   set: (value: Partial<Store>) => void;
   subscribe: (callback: () => void) => () => void;
 } {
-  const store = { current: initialState };
+  const storeRef = useRef(initialState);
+  const subscribersRef = useRef(new Set<() => void>());
 
-  const get = () => store.current;
+  const get = useCallback(() => storeRef.current, []);
 
-  const subscribers = new Set<() => void>();
+  const set = useCallback((value: Partial<AppState>) => {
+    storeRef.current = { ...storeRef.current, ...value };
+    subscribersRef.current.forEach((callback) => callback());
+  }, []);
 
-  const set = (value: Partial<Store>) => {
-    store.current = { ...store.current, ...value };
-    subscribers.forEach((callback) => callback());
-  };
-
-  const subscribe = (callback: () => void) => {
-    subscribers.add(callback);
-    return () => subscribers.delete(callback);
-  };
+  const subscribe = useCallback((callback: () => void) => {
+    subscribersRef.current.add(callback);
+    return () => subscribersRef.current.delete(callback);
+  }, []);
 
   return {
     get,

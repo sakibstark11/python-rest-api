@@ -14,7 +14,7 @@ import {
 } from '@mui/material';
 import moment from 'moment';
 import { useState } from 'react';
-import { useStore } from '../context/AppContext';
+import { useStore } from './hooks/useStore';
 import { EventService } from '../services/events';
 import { ParticipantStatus, type Event, type EventCreate } from '../types';
 import logger from '../utils/logger';
@@ -132,7 +132,6 @@ export default function CreateEventModal({ onClose, edit, eventData }: EventModa
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setAppState({ loading: true });
-
     try {
       if (edit && eventData) {
         const updatedEvent = await EventService.updateEvent(eventData.id, formData);

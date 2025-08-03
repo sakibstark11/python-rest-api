@@ -10,7 +10,7 @@ import {
 } from '@mui/material';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useStore } from '../context/AppContext';
+import { useStore } from './hooks/useStore';
 import { AuthService } from '../services/auth';
 import logger from '../utils/logger';
 

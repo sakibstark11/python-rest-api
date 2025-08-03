@@ -11,7 +11,7 @@ import {
 } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useStore } from '../context/AppContext';
+import { useStore } from '../components/hooks/useStore';
 import { AuthService } from '../services/auth';
 import type { LoginCredentials } from '../types';
 import logger from '../utils/logger';

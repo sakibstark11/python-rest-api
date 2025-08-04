@@ -144,7 +144,7 @@ async def logout(
         key="refresh_token",
         httponly=True,
         secure=False if settings.environment == "development" else True,
-        samesite="lax"
+        samesite="strict"
     )
 
     return {"message": "Successfully logged out"}

@@ -33,7 +33,9 @@ async def create_new_event(
             participant = await get_user_by_email(db, email=email)
             if participant and participant.id != current_user.id:
                 await add_event_participant(db, event_id=db_event.id, user_id=participant.id)
-    return await get_event_by_id(db, event_id=db_event.id)
+
+    event_with_participants = await get_event_by_id(db, event_id=db_event.id)
+    return EventResponse.model_validate(event_with_participants)
 
 
 @router.get("/", response_model=List[EventResponse])
@@ -104,20 +106,19 @@ async def update_existing_event(
         )
 
     old_participants = {p.user.id for p in db_event.participants}
-    
-    updated_event = await update_event(db=db, event_id=event_id, event_update=event_update)
 
+    updated_event = await update_event(db=db, event_id=event_id, event_update=event_update)
     event_response = EventResponse.model_validate(updated_event)
+
     new_participants = {p.user.id for p in event_response.participants}
-    
-    current_users = new_participants.union({event_response.creator_id})
-    await send_event_notification(SSEEventType.EVENT_UPDATED, event_response, current_users)
-    
+    new_participants.add(event_response.creator_id)
+    await send_event_notification(SSEEventType.EVENT_UPDATED, event_response, new_participants)
+
     removed_participants = old_participants - new_participants
     if removed_participants:
         await send_event_notification(SSEEventType.EVENT_DELETED, event_response, removed_participants)
 
-    return updated_event
+    return event_response
 
 
 @router.delete("/{event_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -142,62 +143,14 @@ async def delete_existing_event(
         )
 
     event_response = EventResponse.model_validate(db_event)
+    event_users = {db_event.creator_id}.union(
+        {p.user.id for p in db_event.participants})
 
     await delete_event(db=db, event_id=event_id)
-
-    event_users = {event_response.creator_id}.union({p.user.id for p in event_response.participants})
     await send_event_notification(SSEEventType.EVENT_DELETED, event_response, event_users)
 
 
-@router.post("/{event_id}/invite", status_code=status.HTTP_201_CREATED)
-async def invite_to_event(
-    event_id: str,
-    participant_email: str,
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
-):
-    db_event = await get_event_by_id(db, event_id=event_id)
-    if not db_event:
-        raise CustomHTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            error_code=ErrorCode.EVENT_NOT_FOUND,
-            detail="Event not found"
-        )
-
-    if db_event.creator_id != current_user.id:
-        raise CustomHTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            error_code=ErrorCode.ACCESS_DENIED,
-            detail="Only event creator can invite participants"
-        )
-
-    participant = await get_user_by_email(db, email=participant_email)
-    if not participant:
-        raise CustomHTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            error_code=ErrorCode.NOT_FOUND,
-            detail="User not found"
-        )
-
-    existing_participation = await get_user_participation(db, event_id=event_id, user_id=participant.id)
-    if existing_participation:
-        raise CustomHTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            error_code=ErrorCode.CONFLICT,
-            detail="User already invited to this event"
-        )
-
-    await add_event_participant(db, event_id=event_id, user_id=participant.id)
-
-    updated_event = await get_event_by_id(db, event_id=event_id)
-    event_response = EventResponse.model_validate(updated_event)
-    event_users = {event_response.creator_id}.union({p.user.id for p in event_response.participants})
-    await send_event_notification(SSEEventType.EVENT_INVITE_SENT, event_response, event_users)
-
-    return {"message": "Invitation sent successfully"}
-
-
-@router.post("/{event_id}/respond")
+@router.post("/{event_id}/respond", response_model=EventResponse)
 async def respond_to_event_invitation(
     event_id: str,
     response: EventInviteResponse,
@@ -220,8 +173,16 @@ async def respond_to_event_invitation(
     )
 
     updated_event = await get_event_by_id(db, event_id=event_id)
+    if not updated_event:
+        raise CustomHTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            error_code=ErrorCode.EVENT_NOT_FOUND,
+            detail="Event not found"
+        )
+
     event_response = EventResponse.model_validate(updated_event)
-    event_users = {event_response.creator_id}.union({p.user.id for p in event_response.participants})
+    event_users = {updated_event.creator_id}.union(
+        {p.user.id for p in updated_event.participants})
     await send_event_notification(SSEEventType.EVENT_RESPONSE_UPDATED, event_response, event_users)
 
-    return {"message": f"Response updated to {response.status}"}
+    return event_response

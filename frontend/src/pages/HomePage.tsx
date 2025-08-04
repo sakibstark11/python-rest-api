@@ -25,7 +25,7 @@ function handleEventDelete(events: Event[], eventId: string): Event[] {
 
 export default function HomePage() {
   const [setState] = useStore();
-  const { showSuccess, showInfo } = useSnackBar();
+  const { showSuccess, showInfo, showError } = useSnackBar();
 
   useEffect(() => {
     const token = AuthService.getToken();
@@ -46,7 +46,7 @@ export default function HomePage() {
           
           switch (message.type) {
             case SSEEventType.CONNECTED:
-              showInfo('Connected to real-time updates');
+              showSuccess('Connected for updates');
               break;
             
             case SSEEventType.EVENT_UPDATED:
@@ -85,7 +85,7 @@ export default function HomePage() {
         }
       },
       onerror(error) {
-        logger.error({ error }, 'sse updates failed');
+        showError(`Something went wrong ${error.message}`);
       },
     });
 

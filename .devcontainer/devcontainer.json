@@ -23,5 +23,5 @@
     "apt": "apt update -y && apt install -y openssh-client",
     "pip": "cd backend && pip3 install -e .[dev]"
   },
-  "postStartCommand": "cd backend && python3 create_tables.py"
+  "postStartCommand": "python3 backend/migrations/create_tables.py "
 }

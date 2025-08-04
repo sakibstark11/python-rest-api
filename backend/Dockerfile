@@ -1,9 +1,17 @@
 FROM python:3.13-slim
 
+WORKDIR /app
+
 ENV INSTALL_EXTRAS=.
 ENV PORT=8000
-ENV RELOAD=
 ENV LOG_LEVEL=info
+ENV DATABASE_URL=""
+ENV SECRET_KEY=""
+ENV ENVIRONMENT=production
+ENV ALGORITHM=HS256
+ENV ACCESS_TOKEN_EXPIRE_MINUTES=1
+ENV REFRESH_TOKEN_EXPIRE_DAYS=7
+ENV DB_PORT=5432
 
 EXPOSE ${PORT}
 
@@ -12,4 +20,4 @@ RUN pip install --no-cache-dir ${INSTALL_EXTRAS}
 
 COPY . .
 
-CMD uvicorn main:app --host 0.0.0.0 --port ${PORT} ${RELOAD} --log-level ${LOG_LEVEL} --no-access-log
+CMD python server.py

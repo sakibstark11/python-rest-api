@@ -1,14 +1,16 @@
-from fastapi import APIRouter, Depends, status, Response, Request
-from sqlalchemy.ext.asyncio import AsyncSession
-from core.database import get_db
 from core.config import settings
-from core.security import create_access_token, create_refresh_token, verify_token, get_current_user
+from core.database import get_db
 from core.exceptions import CustomHTTPException, ErrorCode
 from core.refresh_token_store import refresh_token_store
-from schemas.user import UserCreate, UserLogin, UserResponse
-from schemas.auth import Token
-from crud.user import create_user, authenticate_user, get_user_by_email, get_user_by_username, get_user_by_id
+from core.security import (create_access_token, create_refresh_token,
+                           get_current_user, verify_token)
+from crud.user import (authenticate_user, create_user, get_user_by_email,
+                       get_user_by_id, get_user_by_username)
+from fastapi import APIRouter, Depends, Request, Response, status
 from models.user import User
+from schemas.auth import Token
+from schemas.user import UserCreate, UserLogin, UserResponse
+from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 
@@ -48,18 +50,16 @@ async def login(user_credentials: UserLogin, response: Response, db: AsyncSessio
     access_token = create_access_token(data={"sub": str(user.id)})
     refresh_token = create_refresh_token(data={"sub": str(user.id)})
 
-    # Store refresh token in memory
     refresh_token_store.store_token(str(user.id), refresh_token)
 
-    # Set httpOnly cookie for refresh token
     response.set_cookie(
         key="refresh_token",
         value=refresh_token,
         httponly=True,
-        secure=False,  # Set to True in production with HTTPS
+        secure=False,
         samesite="lax",
         max_age=settings.refresh_token_expire_days *
-            24 * 60 * 60  # Convert days to seconds
+            24 * 60 * 60
     )
 
     return {
@@ -75,7 +75,6 @@ async def token_refresh(
     response: Response,
     db: AsyncSession = Depends(get_db)
 ):
-    # Get refresh token from cookie
     refresh_token = request.cookies.get("refresh_token")
     if not refresh_token:
         raise CustomHTTPException(
@@ -111,10 +110,8 @@ async def token_refresh(
     access_token = create_access_token(data={"sub": user.id})
     new_refresh_token = create_refresh_token(data={"sub": user.id})
 
-    # Store new refresh token in memory
     refresh_token_store.store_token(user.id, new_refresh_token)
 
-    # Set new httpOnly cookie
     response.set_cookie(
         key="refresh_token",
         value=new_refresh_token,
@@ -142,18 +139,13 @@ async def logout(
     response: Response,
     current_user: User = Depends(get_current_user)
 ):
-    # Get refresh token from cookie
-    refresh_token = request.cookies.get("refresh_token")
-    
-    # Remove refresh token from store
     refresh_token_store.revoke_token(str(current_user.id))
-    
-    # Clear the refresh token cookie
+
     response.delete_cookie(
         key="refresh_token",
         httponly=True,
         secure=False if settings.environment == "development" else True,
         samesite="lax"
     )
-    
+
     return {"message": "Successfully logged out"}

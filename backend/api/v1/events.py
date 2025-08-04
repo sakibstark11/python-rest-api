@@ -14,7 +14,7 @@ from fastapi import APIRouter, Depends, Query, status
 from models.user import User
 from schemas.event import (EventCreate, EventInviteResponse, EventResponse,
                            EventUpdate)
-from services.sse import send_event_notification
+from services.sse import SSEEventType, send_event_notification
 from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
@@ -103,10 +103,19 @@ async def update_existing_event(
             detail="Only event creator can update the event"
         )
 
+    old_participants = {p.user.id for p in db_event.participants}
+    
     updated_event = await update_event(db=db, event_id=event_id, event_update=event_update)
 
     event_response = EventResponse.model_validate(updated_event)
-    await send_event_notification("event_updated", event_response)
+    new_participants = {p.user.id for p in event_response.participants}
+    
+    current_users = new_participants.union({event_response.creator_id})
+    await send_event_notification(SSEEventType.EVENT_UPDATED, event_response, current_users)
+    
+    removed_participants = old_participants - new_participants
+    if removed_participants:
+        await send_event_notification(SSEEventType.EVENT_DELETED, event_response, removed_participants)
 
     return updated_event
 
@@ -136,7 +145,8 @@ async def delete_existing_event(
 
     await delete_event(db=db, event_id=event_id)
 
-    await send_event_notification("event_deleted", event_response)
+    event_users = {event_response.creator_id}.union({p.user.id for p in event_response.participants})
+    await send_event_notification(SSEEventType.EVENT_DELETED, event_response, event_users)
 
 
 @router.post("/{event_id}/invite", status_code=status.HTTP_201_CREATED)
@@ -181,7 +191,8 @@ async def invite_to_event(
 
     updated_event = await get_event_by_id(db, event_id=event_id)
     event_response = EventResponse.model_validate(updated_event)
-    await send_event_notification("event_invite_sent", event_response)
+    event_users = {event_response.creator_id}.union({p.user.id for p in event_response.participants})
+    await send_event_notification(SSEEventType.EVENT_INVITE_SENT, event_response, event_users)
 
     return {"message": "Invitation sent successfully"}
 
@@ -210,6 +221,7 @@ async def respond_to_event_invitation(
 
     updated_event = await get_event_by_id(db, event_id=event_id)
     event_response = EventResponse.model_validate(updated_event)
-    await send_event_notification("event_response_updated", event_response)
+    event_users = {event_response.creator_id}.union({p.user.id for p in event_response.participants})
+    await send_event_notification(SSEEventType.EVENT_RESPONSE_UPDATED, event_response, event_users)
 
     return {"message": f"Response updated to {response.status}"}

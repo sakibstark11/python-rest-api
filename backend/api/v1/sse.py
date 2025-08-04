@@ -6,7 +6,8 @@ from core.security import get_current_user
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import StreamingResponse
 from models.user import User
-from services.sse import SSEEventMessage, add_connection, remove_connection
+from services.sse import (SSEEventMessage, SSEEventType, add_connection,
+                          remove_connection)
 
 router = APIRouter()
 
@@ -21,7 +22,7 @@ async def subscribe_to_events(
         add_connection(current_user.id, connection_queue)
 
         try:
-            yield "data: {\"type\": \"connected\", \"message\": \"SSE connection established\"}\n\n"
+            yield f"data: {{\"type\": \"{SSEEventType.CONNECTED.value}\", \"message\": \"SSE connection established\"}}\n\n"
 
             while True:
                 if await request.is_disconnected():
@@ -29,13 +30,13 @@ async def subscribe_to_events(
 
                 try:
                     message = await asyncio.wait_for(connection_queue.get(), timeout=1.0)
-                    yield f"data: {json.dumps(message)}\n\n"
+                    data_payload = {
+                        "type": message["type"].value,
+                        "data": message["data"].model_dump(mode="json"),
+                    }
+                    yield f"data: {json.dumps(data_payload)}\n\n"
 
                 except asyncio.TimeoutError:
-                    continue
-                except Exception as e:
-                    root_logger.error("Error processing message",
-                                      extra={"user_id": current_user.id, "error": e})
                     continue
 
         except Exception as e:

@@ -1,13 +1,23 @@
 import asyncio
-import json
-from typing import Dict, List, TypedDict
+from enum import Enum
+from typing import Dict, TypedDict
 
 from core.logger import root_logger
 from schemas.event import EventResponse
 
 
+class SSEEventType(str, Enum):
+    """SSE Event types for real-time notifications."""
+
+    CONNECTED = "connected"
+    EVENT_UPDATED = "event_updated"
+    EVENT_INVITE_SENT = "event_invite_sent"
+    EVENT_RESPONSE_UPDATED = "event_response_updated"
+    EVENT_DELETED = "event_deleted"
+
+
 class SSEEventMessage(TypedDict):
-    type: str
+    type: SSEEventType
     data: EventResponse
 
 
@@ -30,37 +40,25 @@ def remove_connection(user_id: str) -> None:
                      "user_id": user_id})
 
 
-async def send_event_notification(event_type: str, event_data: EventResponse) -> None:
-    """Send event notification to relevant users"""
-    if not active_connections:
+async def send_event_notification(event_type: SSEEventType, event_data: EventResponse, user_ids: set[str]) -> None:
+    """Send event notification to specified users"""
+    if not active_connections or not user_ids:
         return
 
-    relevant_users = get_relevant_users(event_data)
-    if not relevant_users:
-        return
+    message = SSEEventMessage(
+        type=event_type,
+        data=event_data
+    )
 
-    message = {
-        "type": event_type,
-        "data": event_data.model_dump(mode='json')
-    }
-
-    for user_id in relevant_users:
+    for user_id in user_ids:
         if user_id in active_connections:
             try:
                 await active_connections[user_id].put(message)
             except Exception as e:
                 root_logger.error("Failed to send message to user",
-                                  extra={"user_id": user_id, "error": e})
+                                  extra={"user_id": user_id, "error": str(e)})
                 remove_connection(user_id)
 
     root_logger.info("Event sent", extra={
                      "event_type": event_type,
-                     "relevant_users": len(relevant_users)})
-
-
-def get_relevant_users(event_data: EventResponse) -> List[str]:
-    """Extract relevant user IDs from calendar event data"""
-    users = [event_data.creator_id] + \
-        [p.user.id for p in event_data.participants]
-
-    return users
+                     "user_count": len(user_ids)})

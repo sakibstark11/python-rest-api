@@ -22,6 +22,14 @@ export const ParticipantStatus = {
   PENDING: 'pending',
 } as const;
 
+export const SSEEventType = {
+  CONNECTED: 'connected',
+  EVENT_UPDATED: 'event_updated',
+  EVENT_INVITE_SENT: 'event_invite_sent',
+  EVENT_RESPONSE_UPDATED: 'event_response_updated',
+  EVENT_DELETED: 'event_deleted',
+} as const;
+
 export type ParticipantResponse = {
   user: UserInfo;
   status: (typeof ParticipantStatus)[keyof typeof ParticipantStatus];

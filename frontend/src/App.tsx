@@ -2,6 +2,7 @@ import { createTheme, ThemeProvider, CssBaseline } from '@mui/material';
 import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
+import GlobalSnackBar from './components/GlobalSnackBar';
 import AppContext from './context/AppContext';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
@@ -31,6 +32,7 @@ function App() {
               />
             </Routes>
           </Layout>
+          <GlobalSnackBar />
         </ThemeProvider>
       </Router>
     </AppContext>

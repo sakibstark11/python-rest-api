@@ -15,7 +15,8 @@ disable=missing-docstring,
         line-too-long,
         import-error,
         no-name-in-module,
-        unused-argument
+        unused-argument,
+        broad-exception-caught
 
 [REPORTS]
 output-format=text
@@ -90,6 +91,3 @@ min-public-methods=2
 allow-wildcard-with-all=no
 analyse-fallback-blocks=no
 deprecated-modules=optparse,tkinter.tix
-
-[EXCEPTIONS]
-overgeneral-exceptions=Exception

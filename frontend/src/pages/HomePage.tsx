@@ -3,7 +3,9 @@ import { fetchEventSource } from '@microsoft/fetch-event-source';
 import WeeklyEvents from '../components/Events';
 import { AuthService } from '../services/auth';
 import { useStore } from '../components/hooks/useStore';
+import { useSnackBar } from '../components/hooks/useSnackBar';
 import type { Event } from '../types';
+import { SSEEventType } from '../types';
 import logger from '../utils/logger';
 
 function handleEventUpdate(events: Event[], updatedEvent: Event): Event[] {
@@ -22,7 +24,8 @@ function handleEventDelete(events: Event[], eventId: string): Event[] {
 }
 
 export default function HomePage() {
-  const [_,setState] = useStore(state => state.events);
+  const [setState] = useStore();
+  const { showSuccess, showInfo } = useSnackBar();
 
   useEffect(() => {
     const token = AuthService.getToken();
@@ -42,22 +45,36 @@ export default function HomePage() {
           const message = JSON.parse(event.data);
           
           switch (message.type) {
-            case 'connected':
-              logger.info('connected');
+            case SSEEventType.CONNECTED:
+              showInfo('Connected to real-time updates');
               break;
             
-            case 'event_updated':
-            case 'event_invite_sent':
-            case 'event_response_updated':
+            case SSEEventType.EVENT_UPDATED:
               setState((prevState) => ({ 
                 events: handleEventUpdate(prevState.events, message.data),
               }));
+              showInfo(`Event "${message.data.title}" was updated`);
+              break;
+            
+            case SSEEventType.EVENT_INVITE_SENT:
+              setState((prevState) => ({ 
+                events: handleEventUpdate(prevState.events, message.data),
+              }));
+              showSuccess(`You were invited to "${message.data.title}"`);
               break;
               
-            case 'event_deleted':
+            case SSEEventType.EVENT_RESPONSE_UPDATED:
+              setState((prevState) => ({ 
+                events: handleEventUpdate(prevState.events, message.data),
+              }));
+              showInfo(`Response updated for "${message.data.title}"`);
+              break;
+              
+            case SSEEventType.EVENT_DELETED:
               setState((prevState) => ({ 
                 events: handleEventDelete(prevState.events, message.data.id),
               }));
+              showInfo(`Event "${message.data.title}" was deleted`);
               break;
               
             default:

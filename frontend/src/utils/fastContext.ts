@@ -7,6 +7,11 @@ export type AppState = {
   loading: boolean;
   error: string | null;
   accessToken: string | null;
+  snackbar: {
+    open: boolean;
+    message: string;
+    severity: 'success' | 'error' | 'info' | 'warning';
+  };
 };
 
 export const initialState: AppState = {
@@ -15,6 +20,11 @@ export const initialState: AppState = {
   loading: false,
   error: null,
   accessToken: null,
+  snackbar: {
+    open: false,
+    message: '',
+    severity: 'info',
+  },
 };
 
 type StoreApi = {

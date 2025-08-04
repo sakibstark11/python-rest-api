@@ -135,7 +135,6 @@ async def get_current_user_info(current_user: User = Depends(get_current_user)):
 
 @router.post("/logout", status_code=status.HTTP_200_OK)
 async def logout(
-    request: Request,
     response: Response,
     current_user: User = Depends(get_current_user)
 ):

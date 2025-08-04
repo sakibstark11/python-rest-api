@@ -1,20 +1,21 @@
 
-from typing import List, Optional
 from datetime import datetime
+from typing import List, Optional
 
-from fastapi import APIRouter, Depends, status, Query
-from sqlalchemy.ext.asyncio import AsyncSession
 from core.database import get_db
-from core.security import get_current_user
 from core.exceptions import CustomHTTPException, ErrorCode
-from schemas.event import EventCreate, EventUpdate, EventResponse, EventInviteResponse
-from crud.event import (
-    create_event, get_event_by_id, get_user_events, update_event,
-    delete_event, add_event_participant, update_event_participation,
-    get_user_participation
-)
+from core.security import get_current_user
+from crud.event import (add_event_participant, create_event, delete_event,
+                        get_event_by_id, get_user_events,
+                        get_user_participation, update_event,
+                        update_event_participation)
 from crud.user import get_user_by_email
+from fastapi import APIRouter, Depends, Query, status
 from models.user import User
+from schemas.event import (EventCreate, EventInviteResponse, EventResponse,
+                           EventUpdate)
+from services.sse import send_event_notification
+from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 
@@ -103,6 +104,10 @@ async def update_existing_event(
         )
 
     updated_event = await update_event(db=db, event_id=event_id, event_update=event_update)
+
+    event_response = EventResponse.model_validate(updated_event)
+    await send_event_notification("event_updated", event_response)
+
     return updated_event
 
 
@@ -127,7 +132,11 @@ async def delete_existing_event(
             detail="Only event creator can delete the event"
         )
 
+    event_response = EventResponse.model_validate(db_event)
+
     await delete_event(db=db, event_id=event_id)
+
+    await send_event_notification("event_deleted", event_response)
 
 
 @router.post("/{event_id}/invite", status_code=status.HTTP_201_CREATED)
@@ -169,6 +178,11 @@ async def invite_to_event(
         )
 
     await add_event_participant(db, event_id=event_id, user_id=participant.id)
+
+    updated_event = await get_event_by_id(db, event_id=event_id)
+    event_response = EventResponse.model_validate(updated_event)
+    await send_event_notification("event_invite_sent", event_response)
+
     return {"message": "Invitation sent successfully"}
 
 
@@ -193,5 +207,9 @@ async def respond_to_event_invitation(
         user_id=current_user.id,
         status=response.status
     )
+
+    updated_event = await get_event_by_id(db, event_id=event_id)
+    event_response = EventResponse.model_validate(updated_event)
+    await send_event_notification("event_response_updated", event_response)
 
     return {"message": f"Response updated to {response.status}"}

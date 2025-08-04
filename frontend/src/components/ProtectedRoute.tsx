@@ -27,16 +27,13 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
           setAppState({
             user: authData.user,
             accessToken: authData.accessToken,
-            loading: false,
           });
-        } else {
-          setAppState({ loading: false });
         }
       } catch (error) {
         logger.error({ message: 'Failed to get current user', error });
-        setAppState({ loading: false });
       } finally {
         setHasCheckedAuth(true);
+        setAppState({ loading: false });
       }
     };
 

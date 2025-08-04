@@ -19,7 +19,7 @@ export const initialState: AppState = {
 
 type StoreApi = {
   get: () => AppState;
-  set: (value: Partial<AppState>) => void;
+  set: (value: Partial<AppState> | ((prevState: AppState) => Partial<AppState>)) => void;
   subscribe: (callback: () => void) => () => void;
 };
 
@@ -27,7 +27,7 @@ export const StoreContext = createContext<StoreApi | null>(null);
 
 export function Store<Store>(initialState: Store): {
   get: () => Store;
-  set: (value: Partial<Store>) => void;
+  set: (value: Partial<Store> | ((prevState: Store) => Partial<Store>)) => void;
   subscribe: (callback: () => void) => () => void;
 } {
   const storeRef = useRef(initialState);
@@ -35,8 +35,9 @@ export function Store<Store>(initialState: Store): {
 
   const get = useCallback(() => storeRef.current, []);
 
-  const set = useCallback((value: Partial<AppState>) => {
-    storeRef.current = { ...storeRef.current, ...value };
+  const set = useCallback((value: Partial<Store> | ((prevState: Store) => Partial<Store>)) => {
+    const newValue = typeof value === 'function' ? value(storeRef.current) : value;
+    storeRef.current = { ...storeRef.current, ...newValue };
     subscribersRef.current.forEach((callback) => callback());
   }, []);
 

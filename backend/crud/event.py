@@ -152,7 +152,6 @@ async def update_event_participants(
     current_participant_users = result.scalars().all()
     current_user_ids = {p.user_id for p in current_participant_users}
 
-    # Lookup users by email concurrently
     users = await asyncio.gather(
         *(get_user_by_email(db, email=email) for email in participant_emails)
     )

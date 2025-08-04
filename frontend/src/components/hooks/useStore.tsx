@@ -4,11 +4,11 @@ import { initialState, StoreContext } from '../../utils/fastContext';
 
 export function useStore<SelectorOutput>(
   selector: (store: AppState) => SelectorOutput
-): [SelectorOutput, (value: Partial<AppState>) => void];
-export function useStore(): [(value: Partial<AppState>) => void];
+): [SelectorOutput, (value: Partial<AppState> | ((prevState: AppState) => Partial<AppState>)) => void];
+export function useStore(): [(value: Partial<AppState> | ((prevState: AppState) => Partial<AppState>)) => void];
 export function useStore<SelectorOutput>(
   selector?: (store: AppState) => SelectorOutput,
-): [SelectorOutput, (value: Partial<AppState>) => void] | [(value: Partial<AppState>) => void] {
+): [SelectorOutput, (value: Partial<AppState> | ((prevState: AppState) => Partial<AppState>)) => void] | [(value: Partial<AppState> | ((prevState: AppState) => Partial<AppState>)) => void] {
   const store = useContext(StoreContext);
   if (!store) {
     throw new Error('Store not found');

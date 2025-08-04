@@ -16,7 +16,8 @@ disable=missing-docstring,
         import-error,
         no-name-in-module,
         unused-argument,
-        broad-exception-caught
+        broad-exception-caught,
+        logging-fstring-interpolation
 
 [REPORTS]
 output-format=text

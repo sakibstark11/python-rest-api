@@ -1,7 +1,7 @@
 from core.config import settings
 from core.database import get_db
 from core.exceptions import CustomHTTPException, ErrorCode
-from core.refresh_token_store import refresh_token_store
+from core.redis_refresh_token_store import redis_refresh_token_store
 from core.security import (create_access_token, create_refresh_token,
                            get_current_user, verify_token)
 from crud.user import (authenticate_user, create_user, get_user_by_email,
@@ -50,7 +50,7 @@ async def login(user_credentials: UserLogin, response: Response, db: AsyncSessio
     access_token = create_access_token(data={"sub": str(user.id)})
     refresh_token = create_refresh_token(data={"sub": str(user.id)})
 
-    refresh_token_store.store_token(str(user.id), refresh_token)
+    await redis_refresh_token_store.store_token(str(user.id), refresh_token)
 
     response.set_cookie(
         key="refresh_token",
@@ -85,7 +85,7 @@ async def token_refresh(
 
     token_data = verify_token(refresh_token, token_type="refresh")
 
-    if not refresh_token_store.is_token_valid(token_data.user_id, refresh_token):
+    if not await redis_refresh_token_store.is_token_valid(token_data.user_id, refresh_token):
         raise CustomHTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             error_code=ErrorCode.AUTHENTICATION_ERROR,
@@ -110,7 +110,7 @@ async def token_refresh(
     access_token = create_access_token(data={"sub": user.id})
     new_refresh_token = create_refresh_token(data={"sub": user.id})
 
-    refresh_token_store.store_token(user.id, new_refresh_token)
+    await redis_refresh_token_store.store_token(user.id, new_refresh_token)
 
     response.set_cookie(
         key="refresh_token",
@@ -138,7 +138,7 @@ async def logout(
     response: Response,
     current_user: User = Depends(get_current_user)
 ):
-    refresh_token_store.revoke_token(str(current_user.id))
+    await redis_refresh_token_store.revoke_token(current_user.id)
 
     response.delete_cookie(
         key="refresh_token",

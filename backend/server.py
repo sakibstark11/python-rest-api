@@ -9,7 +9,8 @@ def start_server():
         host='0.0.0.0',
         port=settings.port,
         reload=settings.environment != 'production',
-        log_level=settings.log_level
+        log_level=settings.log_level,
+        access_log=False
     )
 
 

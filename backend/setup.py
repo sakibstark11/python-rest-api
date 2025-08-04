@@ -15,6 +15,7 @@ install_requires = [
     "asyncpg==0.30.0",
     "greenlet==3.1.1",
     "python-ulid==2.7.0",
+    "redis==5.2.0",
 ]
 
 dev_requires = [

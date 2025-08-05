@@ -1,6 +1,7 @@
 import { AccountCircle, Logout } from '@mui/icons-material';
 import {
   AppBar,
+  Avatar,
   IconButton,
   ListItemIcon,
   Menu,
@@ -17,6 +18,7 @@ import logger from '../utils/logger';
 export default function TopBar() {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [email, setAppState] = useStore(state => state.user?.email);
+  const [sseConnection] = useStore(state => state.sseConnection);
   const navigate = useNavigate();
   const open = Boolean(anchorEl);
 
@@ -63,15 +65,18 @@ export default function TopBar() {
         {email &&
           <>
             <Typography variant='h6'>{email}</Typography>
-            <IconButton
-              size="large"
-              edge="end"
-              color="inherit"
-              aria-label="profile"
-              onClick={handleProfileClick}
-            >
-              <AccountCircle />
-            </IconButton>
+            <Avatar sx={{ bgcolor: 'transparent', color: sseConnection ? 'green' : 'red' }}>
+              <IconButton
+                size="large"
+                aria-label="profile"
+                color='inherit'
+                onClick={handleProfileClick}
+              >
+           
+                <AccountCircle />
+              </IconButton>
+            </Avatar>
+
             <Menu
               anchorEl={anchorEl}
               open={open}

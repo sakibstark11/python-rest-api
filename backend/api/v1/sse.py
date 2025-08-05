@@ -22,8 +22,6 @@ async def subscribe_to_events(
         add_connection(current_user.id, connection_queue)
 
         try:
-            yield f"data: {{\"type\": \"{SSEEventType.CONNECTED.value}\", \"message\": \"SSE connection established\"}}\n\n"
-
             while True:
                 if await request.is_disconnected():
                     break

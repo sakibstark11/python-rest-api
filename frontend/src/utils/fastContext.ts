@@ -11,7 +11,8 @@ export type AppState = {
     open: boolean;
     message: string;
     severity: 'success' | 'error' | 'info' | 'warning';
-  };
+  },
+  sseConnection: boolean
 };
 
 export const initialState: AppState = {
@@ -25,6 +26,7 @@ export const initialState: AppState = {
     message: '',
     severity: 'info',
   },
+  sseConnection: false,
 };
 
 type StoreApi = {

@@ -11,7 +11,7 @@ class UserEvent(Base):
     __tablename__ = "user_events"
 
     id: Mapped[str] = mapped_column(
-        String, primary_key=True, default=generate_ulid, index=True)
+        String, primary_key=True, default=generate_ulid)
     user_id: Mapped[str] = mapped_column(
         String, ForeignKey("users.id"), nullable=False)
     event_id: Mapped[str] = mapped_column(

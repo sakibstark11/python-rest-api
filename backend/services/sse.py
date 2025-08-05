@@ -1,6 +1,6 @@
 import asyncio
 from enum import Enum
-from typing import Dict, TypedDict
+from typing import Dict, TypedDict, Union, Optional
 
 from core.logger import root_logger
 from schemas.event import EventResponse
@@ -18,7 +18,7 @@ class SSEEventType(str, Enum):
 
 class SSEEventMessage(TypedDict):
     type: SSEEventType
-    data: EventResponse
+    data: Optional[EventResponse]
 
 
 # Store active SSE connections: user_id -> queue

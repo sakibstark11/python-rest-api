@@ -21,6 +21,13 @@ async def subscribe_to_events(
         connection_queue: asyncio.Queue[SSEEventMessage] = asyncio.Queue()
         add_connection(current_user.id, connection_queue)
 
+        # Send connected event immediately
+        connected_payload = {
+            "type": SSEEventType.CONNECTED.value,
+            "data": None,
+        }
+        yield f"data: {json.dumps(connected_payload)}\n\n"
+
         try:
             while True:
                 if await request.is_disconnected():

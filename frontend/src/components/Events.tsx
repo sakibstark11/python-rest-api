@@ -1,11 +1,15 @@
 import { Add } from '@mui/icons-material';
-import { Box, Fab, useTheme } from '@mui/material';
+import { Fab, useTheme } from '@mui/material';
 import moment from 'moment';
 import { useCallback, useEffect, useState } from 'react';
 import { Calendar, momentLocalizer, Views } from 'react-big-calendar';
 import { useStore } from './hooks/useStore';
+import { useSnackBar } from './hooks/useSnackBar';
 import { EventService } from '../services/events';
+import { AuthService } from '../services/auth';
+import { SSEClient } from '../services/sse';
 import type { Event } from '../types';
+import { SSEEventType } from '../types';
 import EventModal from './Event';
 import './styles/calendar.scss';
 import logger from '../utils/logger';
@@ -18,6 +22,21 @@ let currentStartDate: Date = moment(today).startOf(defaultView).toDate();
 let currentEndDate: Date = moment(today).endOf(defaultView).toDate();
 let currentView: string = defaultView;
 
+function handleEventUpdate(events: Event[], updatedEvent: Event): Event[] {
+  const existingIndex = events.findIndex(event => event.id === updatedEvent.id);
+  
+  if (existingIndex >= 0) {
+    const newEvents = [...events];
+    newEvents[existingIndex] = updatedEvent;
+    return newEvents;
+  }
+  return [...events, updatedEvent];
+}
+
+function handleEventDelete(events: Event[], eventId: string): Event[] {
+  return events.filter(event => event.id !== eventId);
+}
+
 
 export default function WeeklyEvents() {
   const [events, setAppState] = useStore(state => state.events);
@@ -25,6 +44,7 @@ export default function WeeklyEvents() {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | undefined>();
   const theme = useTheme();
+  const { showSuccess, showInfo, showError } = useSnackBar();
 
   const fetchEventsInRange = useCallback(async (centerDate: Date, view: typeof Views.DAY | typeof Views.MONTH | typeof Views.WEEK) => {  
     const start = moment(centerDate).startOf(view).toDate();
@@ -60,6 +80,88 @@ export default function WeeklyEvents() {
     fetchEventsInRange(today, defaultView);
   }, [fetchEventsInRange]);
 
+  // SSE connection for real-time updates
+  useEffect(() => {
+    const abortController = new AbortController();
+    const client = new SSEClient('/sse/events', AuthService.getApi(), abortController);
+    
+    const run = async () => {
+      try {
+        for await (const message of client) {
+          switch (message.type) {
+            case SSEEventType.CONNECTED:
+              setAppState({ sseConnection: true });
+              showSuccess('Connected for updates');
+              break;
+
+            case SSEEventType.EVENT_UPDATED:
+              setAppState((prevState) => ({
+                events: handleEventUpdate(prevState.events, message.data),
+              }));
+              showInfo(`Event "${message.data.title}" was updated`);
+              break;
+              
+            case SSEEventType.EVENT_INVITE_SENT:
+              setAppState((prevState) => ({ 
+                events: handleEventUpdate(prevState.events, message.data),
+              }));
+              showSuccess(`You were invited to "${message.data.title}"`);
+              break;
+                
+            case SSEEventType.EVENT_RESPONSE_UPDATED:
+              setAppState((prevState) => ({ 
+                events: handleEventUpdate(prevState.events, message.data),
+              }));
+              showInfo(`Response updated for "${message.data.title}"`);
+              break;
+                
+            case SSEEventType.EVENT_DELETED:
+              setAppState((prevState) => ({ 
+                events: handleEventDelete(prevState.events, message.data.id),
+              }));
+              showInfo(`Event "${message.data.title}" was deleted`);
+              break;
+                
+            default:
+              showError(`Unknown SSE event type ${message.type}`);
+          }
+        }
+      } catch (_e) {
+        setAppState({ sseConnection: false });
+        showError('Connection lost. Please refresh to reconnect.');
+      }
+    };
+
+    run();
+
+    return () => {
+      client.disconnect();
+      setAppState({ sseConnection: false });
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    root?.style.setProperty('--mui-palette-primary-main', theme.palette.primary.main);
+    root?.style.setProperty('--mui-palette-primary-dark', theme.palette.primary.dark);
+    root?.style.setProperty('--mui-palette-primary-light', theme.palette.primary.light);
+    root?.style.setProperty('--mui-palette-primary-contrastText', theme.palette.primary.contrastText);
+    root?.style.setProperty('--mui-palette-success-main', theme.palette.success.main);
+    root?.style.setProperty('--mui-palette-background-default', theme.palette.background.default);
+    root?.style.setProperty('--mui-palette-background-paper', theme.palette.background.paper);
+    root?.style.setProperty('--mui-palette-text-primary', theme.palette.text.primary);
+    root?.style.setProperty('--mui-palette-text-secondary', theme.palette.text.secondary);
+    root?.style.setProperty('--mui-palette-text-disabled', theme.palette.text.disabled);
+    root?.style.setProperty('--mui-palette-divider', theme.palette.divider);
+    root?.style.setProperty('--mui-palette-action-hover', theme.palette.action.hover);
+    root?.style.setProperty('--mui-palette-action-selected', theme.palette.action.selected);
+    root?.style.setProperty('--mui-palette-action-disabledBackground', theme.palette.action.disabledBackground);
+    root?.style.setProperty('--mui-shape-borderRadius', `${theme.shape.borderRadius}px`);
+    root?.style.setProperty('--mui-typography-fontFamily', String(theme.typography.fontFamily));
+    root?.style.setProperty('--mui-typography-fontWeightMedium', String(theme.typography.fontWeightMedium));
+  }, [theme]);
+
   const calendarEvents = events.map(event => ({
     id: event.id,
     title: event.title,
@@ -70,56 +172,27 @@ export default function WeeklyEvents() {
 
   return (
     <>
-      <Box
-        sx={{
-          width: '100%',
-          height: 'calc(100vh - 64px - 32px)',
-          display: 'flex',
-          '--mui-palette-background-paper': theme.palette.background.paper,
-          '--mui-palette-background-default': theme.palette.background.default,
-          '--mui-palette-text-primary': theme.palette.text.primary,
-          '--mui-palette-text-secondary': theme.palette.text.secondary,
-          '--mui-palette-text-disabled': theme.palette.text.disabled,
-          '--mui-palette-primary-main': theme.palette.primary.main,
-          '--mui-palette-primary-dark': theme.palette.primary.dark,
-          '--mui-palette-primary-light': theme.palette.primary.light,
-          '--mui-palette-primary-contrastText': theme.palette.primary.contrastText,
-          '--mui-palette-primary-main-alpha50': `${theme.palette.primary.main}80`,
-          '--mui-palette-success-main': theme.palette.success.main,
-          '--mui-palette-action-hover': theme.palette.action.hover,
-          '--mui-palette-action-selected': theme.palette.action.selected,
-          '--mui-palette-action-disabledBackground': theme.palette.action.disabledBackground,
-          '--mui-palette-divider': theme.palette.divider,
-          '--mui-shape-borderRadius': `${theme.shape.borderRadius}px`,
-          '--mui-spacing-1': theme.spacing(0.5),
-          '--mui-spacing-2': theme.spacing(1),
-          '--mui-typography-fontFamily': theme.typography.fontFamily,
-          '--mui-typography-fontWeightMedium': theme.typography.fontWeightMedium,
+      <Calendar
+        localizer={localizer}
+        events={calendarEvents}
+        startAccessor="start"
+        endAccessor="end"
+        defaultView={defaultView}
+        views={[Views.WEEK, Views.DAY, Views.MONTH]}
+        showMultiDayTimes
+        step={60}
+        toolbar
+        style={{ height: 'calc(100vh - 64px - 32px)', width: '100%', overflow: 'auto' }}
+        onNavigate={(date, view) => {
+          if (view !== Views.AGENDA && view !== Views.WORK_WEEK) {
+            fetchEventsInRange(date, view);
+          }
         }}
-      >
-        <Calendar
-          localizer={localizer}
-          events={calendarEvents}
-          startAccessor="start"
-          endAccessor="end"
-          defaultView={defaultView}
-          views={[Views.WEEK, Views.DAY, Views.MONTH]}
-          showMultiDayTimes
-          step={60}
-          toolbar
-          style={{ height: '100%', width: '100%', overflow: 'auto' }}
-          onNavigate={(date, view) => {
-            if (view !== Views.AGENDA && view !== Views.WORK_WEEK) {
-              fetchEventsInRange(date, view);
-            }
-          }}
-
-          onSelectEvent={event => {
-            setModalOpen(true);
-            setSelectedEvent(event.resource);
-          }}
-        />
-      </Box>
+        onSelectEvent={event => {
+          setModalOpen(true);
+          setSelectedEvent(event.resource);
+        }}
+      />
 
       <Fab
         color="primary"

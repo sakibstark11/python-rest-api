@@ -61,7 +61,7 @@ class RequestIDMiddleware(BaseHTTPMiddleware):
 
             return response
 
-        except Exception as exc:
+        except Exception as exc:  # pylint: disable=broad-exception-caught
             response_time_ms = round(
                 (time.perf_counter() - start_time) * 1000, 2)
             root_logger.error("Request failed with unhandled exception", extra={

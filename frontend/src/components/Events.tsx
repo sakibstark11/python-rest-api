@@ -54,7 +54,6 @@ export default function WeeklyEvents() {
       return;
     }
 
-    // Update tracking variables
     currentStartDate = start;
     currentEndDate = end;
     currentView = view;
@@ -80,7 +79,6 @@ export default function WeeklyEvents() {
     fetchEventsInRange(today, defaultView);
   }, [fetchEventsInRange]);
 
-  // SSE connection for real-time updates
   useEffect(() => {
     const abortController = new AbortController();
     const client = new SSEClient('/sse/events', AuthService.getApi(), abortController);
@@ -123,7 +121,7 @@ export default function WeeklyEvents() {
               break;
                 
             default:
-              showError(`Unknown SSE event type ${message.type}`);
+              showError('Unknown SSE event type');
           }
         }
       } catch (_e) {
@@ -143,23 +141,23 @@ export default function WeeklyEvents() {
 
   useEffect(() => {
     const root = document.documentElement;
-    root?.style.setProperty('--mui-palette-primary-main', theme.palette.primary.main);
-    root?.style.setProperty('--mui-palette-primary-dark', theme.palette.primary.dark);
-    root?.style.setProperty('--mui-palette-primary-light', theme.palette.primary.light);
-    root?.style.setProperty('--mui-palette-primary-contrastText', theme.palette.primary.contrastText);
-    root?.style.setProperty('--mui-palette-success-main', theme.palette.success.main);
-    root?.style.setProperty('--mui-palette-background-default', theme.palette.background.default);
-    root?.style.setProperty('--mui-palette-background-paper', theme.palette.background.paper);
-    root?.style.setProperty('--mui-palette-text-primary', theme.palette.text.primary);
-    root?.style.setProperty('--mui-palette-text-secondary', theme.palette.text.secondary);
-    root?.style.setProperty('--mui-palette-text-disabled', theme.palette.text.disabled);
-    root?.style.setProperty('--mui-palette-divider', theme.palette.divider);
-    root?.style.setProperty('--mui-palette-action-hover', theme.palette.action.hover);
-    root?.style.setProperty('--mui-palette-action-selected', theme.palette.action.selected);
-    root?.style.setProperty('--mui-palette-action-disabledBackground', theme.palette.action.disabledBackground);
-    root?.style.setProperty('--mui-shape-borderRadius', `${theme.shape.borderRadius}px`);
-    root?.style.setProperty('--mui-typography-fontFamily', String(theme.typography.fontFamily));
-    root?.style.setProperty('--mui-typography-fontWeightMedium', String(theme.typography.fontWeightMedium));
+    root.style.setProperty('--mui-palette-primary-main', theme.palette.primary.main);
+    root.style.setProperty('--mui-palette-primary-dark', theme.palette.primary.dark);
+    root.style.setProperty('--mui-palette-primary-light', theme.palette.primary.light);
+    root.style.setProperty('--mui-palette-primary-contrastText', theme.palette.primary.contrastText);
+    root.style.setProperty('--mui-palette-success-main', theme.palette.success.main);
+    root.style.setProperty('--mui-palette-background-default', theme.palette.background.default);
+    root.style.setProperty('--mui-palette-background-paper', theme.palette.background.paper);
+    root.style.setProperty('--mui-palette-text-primary', theme.palette.text.primary);
+    root.style.setProperty('--mui-palette-text-secondary', theme.palette.text.secondary);
+    root.style.setProperty('--mui-palette-text-disabled', theme.palette.text.disabled);
+    root.style.setProperty('--mui-palette-divider', theme.palette.divider);
+    root.style.setProperty('--mui-palette-action-hover', theme.palette.action.hover);
+    root.style.setProperty('--mui-palette-action-selected', theme.palette.action.selected);
+    root.style.setProperty('--mui-palette-action-disabledBackground', theme.palette.action.disabledBackground);
+    root.style.setProperty('--mui-shape-borderRadius', `${theme.shape.borderRadius}px`);
+    root.style.setProperty('--mui-typography-fontFamily', String(theme.typography.fontFamily));
+    root.style.setProperty('--mui-typography-fontWeightMedium', String(theme.typography.fontWeightMedium));
   }, [theme]);
 
   const calendarEvents = events.map(event => ({

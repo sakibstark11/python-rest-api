@@ -1,8 +1,9 @@
 import type { AxiosProgressEvent, AxiosInstance } from 'axios';
+import type { SSEEvent } from '../types';
 
-export class SSEClient implements AsyncIterable<any> {
-  private messageHandler!: (msg: any) => void;
-  private errorHandler!: (error: any) => void;
+export class SSEClient implements AsyncIterable<SSEEvent> {
+  private messageHandler!: (msg: SSEEvent) => void;
+  private errorHandler!: (error: Error) => void;
   private api: AxiosInstance;
   private url: string;
   private controller: AbortController;
@@ -59,14 +60,14 @@ export class SSEClient implements AsyncIterable<any> {
     this.controller.abort();
   }
 
-  public [Symbol.asyncIterator](): AsyncIterator<any> {
+  public [Symbol.asyncIterator](): AsyncIterator<SSEEvent> {
     this.connect();
 
     return {
       next: () =>
         new Promise((resolve, reject) => {
-          this.messageHandler = (msg: any) => resolve({ value: msg, done: false });
-          this.errorHandler = (error: any) => reject(error);
+          this.messageHandler = (msg) => resolve({ value: msg, done: false });
+          this.errorHandler = (error) => reject(error);
         }),
     };
   }

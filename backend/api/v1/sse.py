@@ -21,11 +21,7 @@ async def subscribe_to_events(
         connection_queue: asyncio.Queue[SSEEventMessage] = asyncio.Queue()
         add_connection(current_user.id, connection_queue)
 
-        # Send connected event immediately
-        connected_payload = {
-            "type": SSEEventType.CONNECTED.value,
-            "data": None,
-        }
+        connected_payload = {"type": SSEEventType.CONNECTED.value}
         yield f"data: {json.dumps(connected_payload)}\n\n"
 
         try:
@@ -35,16 +31,12 @@ async def subscribe_to_events(
 
                 try:
                     message = await asyncio.wait_for(connection_queue.get(), timeout=1.0)
-                    data_payload = {
-                        "type": message["type"].value,
-                        "data": message["data"].model_dump(mode="json"),
-                    }
-                    yield f"data: {json.dumps(data_payload)}\n\n"
+                    yield f"data: {json.dumps({"type": message["type"].value, "data": message["data"].model_dump(mode="json")})}\n\n"
 
                 except asyncio.TimeoutError:
                     continue
 
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-exception-caught
             root_logger.error('SSE stream failed', extra={
                               'user_id': current_user.id, 'error': e})
         finally:

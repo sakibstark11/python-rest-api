@@ -1,6 +1,6 @@
 import asyncio
 from enum import Enum
-from typing import Dict, TypedDict, Union, Optional
+from typing import Dict, TypedDict
 
 from core.logger import root_logger
 from schemas.event import EventResponse
@@ -18,7 +18,7 @@ class SSEEventType(str, Enum):
 
 class SSEEventMessage(TypedDict):
     type: SSEEventType
-    data: Optional[EventResponse]
+    data: EventResponse
 
 
 # Store active SSE connections: user_id -> queue
@@ -54,7 +54,7 @@ async def send_event_notification(event_type: SSEEventType, event_data: EventRes
         if user_id in active_connections:
             try:
                 await active_connections[user_id].put(message)
-            except Exception as e:
+            except Exception as e:  # pylint: disable=broad-exception-caught
                 root_logger.error("Failed to send message to user",
                                   extra={"user_id": user_id, "error": str(e)})
                 remove_connection(user_id)

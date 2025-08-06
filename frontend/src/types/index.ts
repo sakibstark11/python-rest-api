@@ -30,6 +30,12 @@ export const SSEEventType = {
   EVENT_DELETED: 'event_deleted',
 } as const;
 
+export type SSEEventType = typeof SSEEventType[keyof typeof SSEEventType];
+
+export type SSEEvent =
+  | { type: typeof SSEEventType.CONNECTED; data?: undefined }
+  | { type: Exclude<SSEEventType, typeof SSEEventType.CONNECTED>; data: Event };
+
 export type ParticipantResponse = {
   user: UserInfo;
   status: (typeof ParticipantStatus)[keyof typeof ParticipantStatus];

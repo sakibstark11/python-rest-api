@@ -1,4 +1,4 @@
-import { Check, Clear, Close } from '@mui/icons-material';
+import { Check, Clear, Close, Delete } from '@mui/icons-material';
 import {
   Box,
   Button,
@@ -153,6 +153,24 @@ export default function CreateEventModal({ onClose, edit, eventData }: EventModa
     }
   };
 
+  const handleDelete = async () => {
+    if (!eventData) return;
+    
+    setAppState({ loading: true });
+    try {
+      await eventService.deleteEvent(eventData.id);
+      setAppState({
+        events: previousEvents.filter(event => event.id !== eventData.id),
+      });
+      onClose();
+    } catch (error) {
+      logger.error({ message: 'Failed to delete event', error });
+      setAppState({ error: 'Failed to delete event' });
+    } finally {
+      setAppState({ loading: false });
+    }
+  };
+
   return (
     <Modal
       open
@@ -278,6 +296,18 @@ export default function CreateEventModal({ onClose, edit, eventData }: EventModa
                     >
                       {loading ? `${edit ? 'Upda' : 'Crea'}ting...` : `${edit ? 'Update' : 'Create'} Event`}
                     </Button>
+                    {edit && (
+                      <Button
+                        variant="outlined"
+                        color="error"
+                        startIcon={<Delete />}
+                        onClick={handleDelete}
+                        disabled={loading}
+                        sx={{ minWidth: '120px' }}
+                      >
+                        {loading ? 'Deleting...' : 'Delete'}
+                      </Button>
+                    )}
                     <Button
                       variant="outlined"
                       onClick={onClose}

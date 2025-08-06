@@ -7,8 +7,6 @@ from schemas.event import EventResponse
 
 
 class SSEEventType(str, Enum):
-    """SSE Event types for real-time notifications."""
-
     CONNECTED = "connected"
     EVENT_UPDATED = "event_updated"
     EVENT_INVITE_SENT = "event_invite_sent"
@@ -21,19 +19,16 @@ class SSEEventMessage(TypedDict):
     data: EventResponse
 
 
-# Store active SSE connections: user_id -> queue
 active_connections: Dict[str, asyncio.Queue[SSEEventMessage]] = {}
 
 
 def add_connection(user_id: str, connection_queue: asyncio.Queue[SSEEventMessage]) -> None:
-    """Add a new SSE connection queue for a user"""
     active_connections[user_id] = connection_queue
     root_logger.info("SSE connection added", extra={
                      "user_id": user_id, "total_connections": len(active_connections)})
 
 
 def remove_connection(user_id: str) -> None:
-    """Remove an SSE connection queue for a user"""
     if user_id in active_connections:
         del active_connections[user_id]
     root_logger.info("SSE connection removed", extra={
@@ -41,7 +36,6 @@ def remove_connection(user_id: str) -> None:
 
 
 async def send_event_notification(event_type: SSEEventType, event_data: EventResponse, user_ids: set[str]) -> None:
-    """Send event notification to specified users"""
     if not active_connections or not user_ids:
         return
 

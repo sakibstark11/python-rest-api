@@ -5,8 +5,6 @@ from datetime import datetime, timezone
 
 
 class JSONFormatter(logging.Formatter):
-    """Custom JSON formatter for structured logging."""
-
     def format(self, record: logging.LogRecord):
         log_entry = {
             "timestamp": datetime.now(timezone.utc).isoformat() + "Z",

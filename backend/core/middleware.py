@@ -74,5 +74,4 @@ class RequestIDMiddleware(BaseHTTPMiddleware):
 
 
 def get_request_id() -> str:
-    """Get the current request ID from context."""
     return request_id_context.get()

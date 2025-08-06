@@ -1,64 +1,70 @@
-import axios from 'axios';
+import axios, { type AxiosInstance } from 'axios';
 import type { LoginCredentials, SignupData, User } from '../types';
 import { logAxiosError } from '../utils/errorLogger';
 
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  withCredentials: true,
-});
+class AuthService {
+  private api: AxiosInstance;
+  private currentToken: string | null = null;
 
-api.interceptors.request.use((config) => {
-  const token = AuthService.getToken();
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+  constructor() {
+    this.api = axios.create({
+      baseURL: import.meta.env.VITE_API_BASE_URL,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      withCredentials: true,
+    });
 
-api.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-
-    if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url?.includes('/auth/refresh')) {
-      originalRequest._retry = true;
-
-      try {
-        const authResponse = await AuthService.refreshToken();
-        AuthService.setToken(authResponse.access_token);
-        return api(originalRequest);
-      } catch (e) {
-        logAxiosError(e, 'failed to refresh tokens');
-        AuthService.removeToken();
-        return Promise.reject(error);
+    this.api.interceptors.request.use((config) => {
+      const token = this.getToken();
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
       }
-    }
+      return config;
+    });
 
-    return Promise.reject(error);
-  },
-);
+    this.api.interceptors.response.use(
+      (response) => response,
+      async (error) => {
+        const originalRequest = error.config;
 
-export class AuthService {
-  private static currentToken: string | null = null;
+        if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url?.includes('/auth/refresh')) {
+          originalRequest._retry = true;
 
-  static setToken(token: string | null) {
+          try {
+            const authResponse = await this.refreshToken();
+            this.setToken(authResponse.access_token);
+            return this.api(originalRequest);
+          } catch (e) {
+            logAxiosError(e, 'failed to refresh tokens');
+            this.removeToken();
+            return Promise.reject(error);
+          }
+        }
+        return Promise.reject(error);
+      },
+    );
+  }
+
+  getApi(): AxiosInstance {
+    return this.api;
+  }
+
+  setToken(token: string | null) {
     this.currentToken = token;
   }
 
-  static getToken() {
+  getToken() {
     return this.currentToken;
   }
 
-  static removeToken() {
+  removeToken() {
     this.currentToken = null;
   }
 
-  static async login(credentials: LoginCredentials) {
+  async login(credentials: LoginCredentials) {
     try {
-      const response = await api.post('/auth/login', credentials);
+      const response = await this.api.post('/auth/login', credentials);
       return response.data;
     } catch (error) {
       logAxiosError(error, 'login');
@@ -66,9 +72,9 @@ export class AuthService {
     }
   }
 
-  static async refreshToken() {
+  async refreshToken() {
     try {
-      const response = await api.post('/auth/refresh');
+      const response = await this.api.post('/auth/refresh');
       return response.data;
     } catch (error) {
       logAxiosError(error, 'refresh token');
@@ -76,7 +82,7 @@ export class AuthService {
     }
   }
 
-  static async initializeAuth() {
+  async initializeAuth() {
     try {
       const authResponse = await this.refreshToken();
       this.setToken(authResponse.access_token);
@@ -91,9 +97,9 @@ export class AuthService {
     }
   }
 
-  static async signup(userData: SignupData): Promise<User> {
+  async signup(userData: SignupData): Promise<User> {
     try {
-      const response = await axios.post('/auth/register', userData);
+      const response = await this.api.post('/auth/register', userData);
       return response.data;
     } catch (error) {
       logAxiosError(error, 'signup');
@@ -101,9 +107,9 @@ export class AuthService {
     }
   }
 
-  static async getCurrentUser(): Promise<User> {
+  async getCurrentUser(): Promise<User> {
     try {
-      const response = await api.get('/auth/me');
+      const response = await this.api.get('/auth/me');
       return response.data;
     } catch (error) {
       logAxiosError(error, 'get current user');
@@ -111,15 +117,15 @@ export class AuthService {
     }
   }
 
-  static async logout(): Promise<void> {
+  async logout(): Promise<void> {
     try {
-      await api.post('/auth/logout');
+      await this.api.post('/auth/logout');
     } catch (error) {
       logAxiosError(error, 'logout');
     }
   }
 
-  static isTokenValid(token: string): boolean {
+  isTokenValid(token: string): boolean {
     if (!token) return false;
 
     try {
@@ -130,8 +136,6 @@ export class AuthService {
       return false;
     }
   }
-
-  static getApi() {
-    return api;
-  }
 }
+
+export const authService = new AuthService();

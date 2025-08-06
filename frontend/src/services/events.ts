@@ -1,17 +1,22 @@
 import type { Event, EventCreate } from '../types';
-import { AuthService } from './auth';
 import { logAxiosError } from '../utils/errorLogger';
-
-const api = AuthService.getApi();
+import type { AxiosInstance } from 'axios';
+import { authService } from './auth';
 
 export class EventService {
-  static async getEvents(startDate?: string, endDate?: string): Promise<Event[]> {
+  private api: AxiosInstance;
+
+  constructor(apiInstance: AxiosInstance) {
+    this.api = apiInstance;
+  }
+
+  public async getEvents(startDate?: string, endDate?: string): Promise<Event[]> {
     try {
       const params = new URLSearchParams();
       if (startDate) params.append('start_date', startDate);
       if (endDate) params.append('end_date', endDate);
 
-      const response = await api.get(`/events/?start_date=${startDate}&end_date=${endDate}`);
+      const response = await this.api.get(`/events/?start_date=${startDate}&end_date=${endDate}`);
       return response.data;
     } catch (error) {
       logAxiosError(error, 'get events');
@@ -19,9 +24,9 @@ export class EventService {
     }
   }
 
-  static async getEvent(eventId: string): Promise<Event> {
+  public async getEvent(eventId: string): Promise<Event> {
     try {
-      const response = await api.get(`/events/${eventId}`);
+      const response = await this.api.get(`/events/${eventId}`);
       return response.data;
     } catch (error) {
       logAxiosError(error, 'get event');
@@ -29,9 +34,9 @@ export class EventService {
     }
   }
 
-  static async createEvent(eventData: EventCreate): Promise<Event> {
+  public async createEvent(eventData: EventCreate): Promise<Event> {
     try {
-      const response = await api.post('/events/', eventData);
+      const response = await this.api.post('/events/', eventData);
       return response.data;
     } catch (error) {
       logAxiosError(error, 'create event');
@@ -39,9 +44,9 @@ export class EventService {
     }
   }
 
-  static async updateEvent(eventId: string, eventData: Partial<EventCreate>): Promise<Event> {
+  public async updateEvent(eventId: string, eventData: Partial<EventCreate>): Promise<Event> {
     try {
-      const response = await api.put(`/events/${eventId}`, eventData);
+      const response = await this.api.put(`/events/${eventId}`, eventData);
       return response.data;
     } catch (error) {
       logAxiosError(error, 'update event');
@@ -49,18 +54,18 @@ export class EventService {
     }
   }
 
-  static async deleteEvent(eventId: string): Promise<void> {
+  public async deleteEvent(eventId: string): Promise<void> {
     try {
-      await api.delete(`/events/${eventId}`);
+      await this.api.delete(`/events/${eventId}`);
     } catch (error) {
       logAxiosError(error, 'delete event');
       throw error;
     }
   }
 
-  static async respondToEvent(eventId: string, status: 'accepted' | 'declined'): Promise<void> {
+  public async respondToEvent(eventId: string, status: 'accepted' | 'declined'): Promise<void> {
     try {
-      await api.post(`/events/${eventId}/respond`, {
+      await this.api.post(`/events/${eventId}/respond`, {
         event_id: eventId,
         status,
       });
@@ -69,13 +74,6 @@ export class EventService {
       throw error;
     }
   }
-
-  static async inviteToEvent(eventId: string, participantEmail: string): Promise<void> {
-    try {
-      await api.post(`/events/${eventId}/invite`, { participant_email: participantEmail });
-    } catch (error) {
-      logAxiosError(error, 'invite to event');
-      throw error;
-    }
-  }
 }
+
+export const eventService = new EventService(authService.getApi());

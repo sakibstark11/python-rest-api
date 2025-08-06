@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useStore } from './hooks/useStore';
-import { AuthService } from '../services/auth';
+import { authService } from '../services/auth';
 import logger from '../utils/logger';
 
 type ProtectedRouteProps = {
@@ -14,16 +14,16 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   useEffect(() => {
     const tryInitializeAuth = async () => {
-      if (user && accessToken && AuthService.isTokenValid(accessToken)) {
+      if (user && accessToken && authService.isTokenValid(accessToken)) {
         setHasCheckedAuth(true);
         return;
       }
 
       setAppState({ loading: true });
       try {
-        const authData = await AuthService.initializeAuth();
+        const authData = await authService.initializeAuth();
         if (authData) {
-          AuthService.setToken(authData.accessToken);
+          authService.setToken(authData.accessToken);
           setAppState({
             user: authData.user,
             accessToken: authData.accessToken,

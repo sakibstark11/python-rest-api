@@ -5,8 +5,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { Calendar, momentLocalizer, Views } from 'react-big-calendar';
 import { useStore } from './hooks/useStore';
 import { useSnackBar } from './hooks/useSnackBar';
-import { EventService } from '../services/events';
-import { AuthService } from '../services/auth';
+import { eventService } from '../services/events';
+import { authService } from '../services/auth';
 import { SSEClient } from '../services/sse';
 import type { Event } from '../types';
 import { SSEEventType } from '../types';
@@ -45,6 +45,7 @@ export default function WeeklyEvents() {
   const theme = useTheme();
   const { showSuccess, showInfo, showError } = useSnackBar();
 
+
   const shouldFetchEvents = (centerDate: Date, view: typeof Views.DAY | typeof Views.MONTH | typeof Views.WEEK) => {
     const start = moment(centerDate).startOf(view).toDate();
     const end = moment(centerDate).endOf(view).toDate();
@@ -61,7 +62,7 @@ export default function WeeklyEvents() {
     try {
       setAppState({ loading: true });
 
-      const result = await EventService.getEvents(
+      const result = await eventService.getEvents(
         moment(start).toISOString(),
         moment(end).toISOString(),
       );
@@ -81,7 +82,7 @@ export default function WeeklyEvents() {
 
   useEffect(() => {
     const abortController = new AbortController();
-    const client = new SSEClient('/sse/events', AuthService.getApi(), abortController);
+    const client = new SSEClient('/sse/events', authService.getApi(), abortController);
     
     const run = async () => {
       try {

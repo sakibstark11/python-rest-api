@@ -15,7 +15,7 @@ import {
 import moment from 'moment';
 import { useState } from 'react';
 import { useStore } from './hooks/useStore';
-import { EventService } from '../services/events';
+import { eventService } from '../services/events';
 import { ParticipantStatus, type Event, type EventCreate } from '../types';
 import logger from '../utils/logger';
 
@@ -76,7 +76,7 @@ export default function CreateEventModal({ onClose, edit, eventData }: EventModa
     setAppState({ loading: true });
 
     try {
-      await EventService.respondToEvent(eventData.id, status);
+      await eventService.respondToEvent(eventData.id, status);
 
       const updatedEvents = previousEvents.map(event => {
         if (event.id === eventData.id) {
@@ -134,14 +134,14 @@ export default function CreateEventModal({ onClose, edit, eventData }: EventModa
     setAppState({ loading: true });
     try {
       if (edit && eventData) {
-        const updatedEvent = await EventService.updateEvent(eventData.id, formData);
+        const updatedEvent = await eventService.updateEvent(eventData.id, formData);
         setAppState({
           events: previousEvents.map(event =>
             event.id === updatedEvent.id ? updatedEvent : event,
           ),
         });
       } else {
-        const newEvent = await EventService.createEvent(formData);
+        const newEvent = await eventService.createEvent(formData);
         setAppState({ events: [...previousEvents, newEvent] });
       }
       onClose();

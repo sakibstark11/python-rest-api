@@ -12,7 +12,7 @@ import {
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../components/hooks/useStore';
-import { AuthService } from '../services/auth';
+import { authService } from '../services/auth';
 import type { LoginCredentials } from '../types';
 import logger from '../utils/logger';
 
@@ -27,7 +27,7 @@ export default function LoginPage() {
   const [error] = useStore((state) => state.error);
 
   useEffect(() => {
-    if (accessToken && AuthService.isTokenValid(accessToken)) {
+    if (accessToken && authService.isTokenValid(accessToken)) {
       navigate('/');
     } else {
       setAppState({ user: null, accessToken: null, events: [], error: null, loading: false });
@@ -40,10 +40,10 @@ export default function LoginPage() {
     setAppState({ loading: true, error: null });
 
     try {
-      const authResponse = await AuthService.login(credentials);
+      const authResponse = await authService.login(credentials);
 
-      AuthService.setToken(authResponse.access_token);
-      const user = await AuthService.getCurrentUser();
+      authService.setToken(authResponse.access_token);
+      const user = await authService.getCurrentUser();
 
       setAppState({
         user,

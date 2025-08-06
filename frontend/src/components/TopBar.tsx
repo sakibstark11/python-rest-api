@@ -12,7 +12,7 @@ import {
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from './hooks/useStore';
-import { AuthService } from '../services/auth';
+import { authService } from '../services/auth';
 import logger from '../utils/logger';
 
 export default function TopBar() {
@@ -32,8 +32,8 @@ export default function TopBar() {
 
   const handleLogout = async () => {
     try {
-      await AuthService.logout();
-      AuthService.removeToken();
+      await authService.logout();
+      authService.removeToken();
       setAppState({
         user: null,
         accessToken: null,
@@ -44,7 +44,7 @@ export default function TopBar() {
     } catch (error) {
       logger.error({ message: 'Failed to logout', error });
       
-      AuthService.removeToken();
+      authService.removeToken();
       setAppState({
         user: null,
         accessToken: null,

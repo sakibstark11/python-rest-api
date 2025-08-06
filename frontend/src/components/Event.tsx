@@ -66,10 +66,11 @@ export default function CreateEventModal({ onClose, edit, eventData }: EventModa
     if (responseMode) {
       return 'Respond to Event';
     }
+
     return 'Create New Event';
   };
 
-  const handleResponse = async (
+  const handleResponse = async(
     status: typeof ParticipantStatus.ACCEPTED | typeof ParticipantStatus.DECLINED) => {
     if (!eventData) return;
 
@@ -89,6 +90,7 @@ export default function CreateEventModal({ onClose, edit, eventData }: EventModa
             ),
           };
         }
+
         return event;
       });
 
@@ -119,6 +121,7 @@ export default function CreateEventModal({ onClose, edit, eventData }: EventModa
     if (e.key === 'Enter') {
       e.preventDefault();
       const email = formData.participant_input.trim();
+
       if (email && !formData.participant_emails.includes(email)) {
         setFormData({
           ...formData,
@@ -129,12 +132,13 @@ export default function CreateEventModal({ onClose, edit, eventData }: EventModa
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async(e: React.FormEvent) => {
     e.preventDefault();
     setAppState({ loading: true });
     try {
       if (edit && eventData) {
         const updatedEvent = await eventService.updateEvent(eventData.id, formData);
+
         setAppState({
           events: previousEvents.map(event =>
             event.id === updatedEvent.id ? updatedEvent : event,
@@ -142,6 +146,7 @@ export default function CreateEventModal({ onClose, edit, eventData }: EventModa
         });
       } else {
         const newEvent = await eventService.createEvent(formData);
+
         setAppState({ events: [...previousEvents, newEvent] });
       }
       onClose();
@@ -153,9 +158,9 @@ export default function CreateEventModal({ onClose, edit, eventData }: EventModa
     }
   };
 
-  const handleDelete = async () => {
+  const handleDelete = async() => {
     if (!eventData) return;
-    
+
     setAppState({ loading: true });
     try {
       await eventService.deleteEvent(eventData.id);
@@ -273,6 +278,7 @@ export default function CreateEventModal({ onClose, edit, eventData }: EventModa
                 <Box>
                   {formData.participant_emails.map((email) => {
                     const color = eventData?.participants?.find(p => p.user.email === email)?.status ?? 'default';
+
                     return <Chip
                       color={statusToChipMap[color]}
                       key={email}

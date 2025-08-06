@@ -13,15 +13,17 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
 
   useEffect(() => {
-    const tryInitializeAuth = async () => {
+    const tryInitializeAuth = async() => {
       if (user && accessToken && authService.isTokenValid(accessToken)) {
         setHasCheckedAuth(true);
+
         return;
       }
 
       setAppState({ loading: true });
       try {
         const authData = await authService.initializeAuth();
+
         if (authData) {
           authService.setToken(authData.accessToken);
           setAppState({

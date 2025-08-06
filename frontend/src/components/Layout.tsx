@@ -25,7 +25,7 @@ export default function Layout({ children }: LayoutProps) {
       >
         {children}
       </Paper>
-      
+
       <Backdrop
         sx={{
           color: '#fff',

@@ -30,7 +30,7 @@ export default function TopBar() {
     setAnchorEl(null);
   };
 
-  const handleLogout = async () => {
+  const handleLogout = async() => {
     try {
       await authService.logout();
       authService.removeToken();
@@ -43,7 +43,7 @@ export default function TopBar() {
       navigate('/login');
     } catch (error) {
       logger.error({ message: 'Failed to logout', error });
-      
+
       authService.removeToken();
       setAppState({
         user: null,
@@ -72,7 +72,7 @@ export default function TopBar() {
                 color='inherit'
                 onClick={handleProfileClick}
               >
-           
+
                 <AccountCircle />
               </IconButton>
             </Avatar>

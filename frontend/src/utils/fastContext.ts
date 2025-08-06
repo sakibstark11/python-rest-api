@@ -49,12 +49,14 @@ export function Store<Store>(initialState: Store): {
 
   const set = useCallback((value: Partial<Store> | ((prevState: Store) => Partial<Store>)) => {
     const newValue = typeof value === 'function' ? value(storeRef.current) : value;
+
     storeRef.current = { ...storeRef.current, ...newValue };
     subscribersRef.current.forEach((callback) => callback());
   }, []);
 
   const subscribe = useCallback((callback: () => void) => {
     subscribersRef.current.add(callback);
+
     return () => subscribersRef.current.delete(callback);
   }, []);
 

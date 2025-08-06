@@ -34,7 +34,7 @@ export default function LoginPage() {
     }
   }, [accessToken, navigate, setAppState]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async(e: React.FormEvent) => {
     e.preventDefault();
 
     setAppState({ loading: true, error: null });
@@ -53,7 +53,7 @@ export default function LoginPage() {
       navigate('/');
     } catch (error) {
       logger.error({ message: 'Login failed', error });
-      
+
       setAppState({
         loading: false,
         error: 'Login failed',

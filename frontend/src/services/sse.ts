@@ -3,10 +3,15 @@ import type { SSEEvent } from '../types';
 
 export class SSEClient implements AsyncIterable<SSEEvent> {
   private messageHandler!: (msg: SSEEvent) => void;
+
   private errorHandler!: (error: Error) => void;
+
   private api: AxiosInstance;
+
   private url: string;
+
   private controller: AbortController;
+
   private connected: boolean = false;
 
   constructor(url: string, api: AxiosInstance, controller: AbortController) {
@@ -31,6 +36,7 @@ export class SSEClient implements AsyncIterable<SSEEvent> {
         const { responseText } = progressEvent.event.target;
 
         const lastDoubleNewline = responseText.lastIndexOf('\n\n');
+
         if (lastDoubleNewline === -1) return;
 
         const prevDoubleNewline = responseText.lastIndexOf('\n\n', lastDoubleNewline - 1);
@@ -39,9 +45,11 @@ export class SSEClient implements AsyncIterable<SSEEvent> {
 
         if (message.startsWith('data: ')) {
           const data = message.slice(6).trim();
+
           if (data) {
             try {
               const parsed = JSON.parse(data);
+
               queueMicrotask(() => this.messageHandler(parsed));
             } catch (err) {
               queueMicrotask(() => this.errorHandler(new Error(`Failed to parse SSE message: ${err}`)));

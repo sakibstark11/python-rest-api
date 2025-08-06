@@ -33,7 +33,7 @@ export default tseslint.config([
         'warn',
         { allowConstantExport: true },
       ],
-      "no-console": ["error", { allow: ["warn", "error"] }],
+      'no-console': ['error', { allow: ['warn', 'error'] }],
       '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
       '@typescript-eslint/consistent-type-imports': [
         'error',
@@ -54,7 +54,9 @@ export default tseslint.config([
       '@typescript-eslint/no-explicit-any': 'warn',
       'react/react-in-jsx-scope': 'off',
       'react/prop-types': 'off',
-      'no-extra-semi': "error",
+
+      // ✅ Strict spacing and formatting
+      'no-extra-semi': 'error',
       'indent': ['error', 2, { SwitchCase: 1 }],
       'semi': ['error', 'always'],
       'quotes': ['error', 'single'],
@@ -65,6 +67,23 @@ export default tseslint.config([
       'keyword-spacing': ['error', { before: true, after: true }],
       'space-infix-ops': ['error', { int32Hint: false }],
       'eol-last': ['error', 'always'],
+      'no-multi-spaces': ['error'],
+      'no-trailing-spaces': ['error'],
+      'padded-blocks': ['error', 'never'],
+      'padding-line-between-statements': [
+        'error',
+        { blankLine: 'always', prev: 'directive', next: '*' },
+        { blankLine: 'any', prev: 'directive', next: 'directive' },
+        { blankLine: 'always', prev: ['const', 'let', 'var'], next: '*' },
+        { blankLine: 'any', prev: ['const', 'let', 'var'], next: ['const', 'let', 'var'] },
+        { blankLine: 'always', prev: '*', next: 'return' },
+      ],
+      'lines-between-class-members': ['error', 'always'],
+      'linebreak-style': ['error', 'unix'],
+      'block-spacing': ['error', 'always'],
+      'arrow-spacing': ['error', { before: true, after: true }],
+      'space-before-function-paren': ['error', 'never'],
+      'space-unary-ops': ['error', { words: true, nonwords: false }],
     },
     settings: {
       react: {

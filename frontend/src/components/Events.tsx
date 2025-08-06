@@ -23,12 +23,15 @@ let currentEndDate: Date = moment(today).endOf(defaultView).toDate();
 
 function handleEventUpdate(events: Event[], updatedEvent: Event): Event[] {
   const existingIndex = events.findIndex(event => event.id === updatedEvent.id);
-  
+
   if (existingIndex >= 0) {
     const newEvents = [...events];
+
     newEvents[existingIndex] = updatedEvent;
+
     return newEvents;
   }
+
   return [...events, updatedEvent];
 }
 
@@ -52,13 +55,14 @@ export default function WeeklyEvents() {
 
     if (start >= currentStartDate && end <= currentEndDate) {
       return false;
-    }  
+    }
     currentStartDate = start;
     currentEndDate = end;
+
     return true;
   };
 
-  const fetchEventsInRange = useCallback(async (start: Date, end: Date) => {
+  const fetchEventsInRange = useCallback(async(start: Date, end: Date) => {
     try {
       setAppState({ loading: true });
 
@@ -66,6 +70,7 @@ export default function WeeklyEvents() {
         moment(start).toISOString(),
         moment(end).toISOString(),
       );
+
       setAppState({ events: result });
     } catch (error) {
       logger.error({ message: 'Failed to fetch events', error });
@@ -83,8 +88,8 @@ export default function WeeklyEvents() {
   useEffect(() => {
     const abortController = new AbortController();
     const client = new SSEClient('/sse/events', authService.getApi(), abortController);
-    
-    const run = async () => {
+
+    const run = async() => {
       try {
         for await (const message of client) {
           switch (message.type) {
@@ -99,28 +104,28 @@ export default function WeeklyEvents() {
               }));
               showInfo(`Event "${message.data.title}" was updated`);
               break;
-              
+
             case SSEEventType.EVENT_INVITE_SENT:
-              setAppState((prevState) => ({ 
+              setAppState((prevState) => ({
                 events: handleEventUpdate(prevState.events, message.data),
               }));
               showSuccess(`You were invited to "${message.data.title}"`);
               break;
-                
+
             case SSEEventType.EVENT_RESPONSE_UPDATED:
-              setAppState((prevState) => ({ 
+              setAppState((prevState) => ({
                 events: handleEventUpdate(prevState.events, message.data),
               }));
               showInfo(`Response updated for "${message.data.title}"`);
               break;
-                
+
             case SSEEventType.EVENT_DELETED:
-              setAppState((prevState) => ({ 
+              setAppState((prevState) => ({
                 events: handleEventDelete(prevState.events, message.data.id),
               }));
               showInfo(`Event "${message.data.title}" was deleted`);
               break;
-                
+
             default:
               showError('Unknown SSE event type');
           }
@@ -142,6 +147,7 @@ export default function WeeklyEvents() {
 
   useEffect(() => {
     const root = document.documentElement;
+
     root.style.setProperty('--mui-palette-primary-main', theme.palette.primary.main);
     root.style.setProperty('--mui-palette-primary-dark', theme.palette.primary.dark);
     root.style.setProperty('--mui-palette-primary-light', theme.palette.primary.light);

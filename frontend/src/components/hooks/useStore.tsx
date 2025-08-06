@@ -10,6 +10,7 @@ export function useStore<SelectorOutput>(
   selector?: (store: AppState) => SelectorOutput,
 ): [SelectorOutput, (value: Partial<AppState> | ((prevState: AppState) => Partial<AppState>)) => void] | [(value: Partial<AppState> | ((prevState: AppState) => Partial<AppState>)) => void] {
   const store = useContext(StoreContext);
+
   if (!store) {
     throw new Error('Store not found');
   }
@@ -20,7 +21,9 @@ export function useStore<SelectorOutput>(
       () => selector(store.get()),
       () => selector(initialState),
     );
+
     return [state, store.set];
   }
+
   return [store.set];
 }

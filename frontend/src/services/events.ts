@@ -13,10 +13,12 @@ export class EventService {
   public async getEvents(startDate?: string, endDate?: string): Promise<Event[]> {
     try {
       const params = new URLSearchParams();
+
       if (startDate) params.append('start_date', startDate);
       if (endDate) params.append('end_date', endDate);
 
       const response = await this.api.get(`/events/?start_date=${startDate}&end_date=${endDate}`);
+
       return response.data;
     } catch (error) {
       logAxiosError(error, 'get events');
@@ -27,6 +29,7 @@ export class EventService {
   public async getEvent(eventId: string): Promise<Event> {
     try {
       const response = await this.api.get(`/events/${eventId}`);
+
       return response.data;
     } catch (error) {
       logAxiosError(error, 'get event');
@@ -37,6 +40,7 @@ export class EventService {
   public async createEvent(eventData: EventCreate): Promise<Event> {
     try {
       const response = await this.api.post('/events/', eventData);
+
       return response.data;
     } catch (error) {
       logAxiosError(error, 'create event');
@@ -47,6 +51,7 @@ export class EventService {
   public async updateEvent(eventId: string, eventData: Partial<EventCreate>): Promise<Event> {
     try {
       const response = await this.api.put(`/events/${eventId}`, eventData);
+
       return response.data;
     } catch (error) {
       logAxiosError(error, 'update event');

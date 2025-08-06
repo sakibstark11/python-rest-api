@@ -1,11 +1,12 @@
 import uvicorn
+from api.main import app
 from core.config import settings
 
 
 def start_server():
     """Start the FastAPI server using uvicorn."""
     uvicorn.run(
-        "api.main:app",
+        app,
         host='0.0.0.0',
         port=settings.port,
         reload=settings.environment != 'production',

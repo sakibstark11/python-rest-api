@@ -4,6 +4,7 @@ import { logAxiosError } from '../utils/errorLogger';
 
 class AuthService {
   private api: AxiosInstance;
+
   private currentToken: string | null = null;
 
   constructor() {
@@ -17,15 +18,17 @@ class AuthService {
 
     this.api.interceptors.request.use((config) => {
       const token = this.getToken();
+
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
+
       return config;
     });
 
     this.api.interceptors.response.use(
       (response) => response,
-      async (error) => {
+      async(error) => {
         const originalRequest = error.config;
 
         if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url?.includes('/auth/refresh')) {
@@ -33,14 +36,18 @@ class AuthService {
 
           try {
             const authResponse = await this.refreshToken();
+
             this.setToken(authResponse.access_token);
+
             return this.api(originalRequest);
           } catch (e) {
             logAxiosError(e, 'failed to refresh tokens');
             this.removeToken();
+
             return Promise.reject(error);
           }
         }
+
         return Promise.reject(error);
       },
     );
@@ -65,6 +72,7 @@ class AuthService {
   async login(credentials: LoginCredentials) {
     try {
       const response = await this.api.post('/auth/login', credentials);
+
       return response.data;
     } catch (error) {
       logAxiosError(error, 'login');
@@ -75,6 +83,7 @@ class AuthService {
   async refreshToken() {
     try {
       const response = await this.api.post('/auth/refresh');
+
       return response.data;
     } catch (error) {
       logAxiosError(error, 'refresh token');
@@ -85,14 +94,17 @@ class AuthService {
   async initializeAuth() {
     try {
       const authResponse = await this.refreshToken();
+
       this.setToken(authResponse.access_token);
       const user = await this.getCurrentUser();
+
       return {
         user,
         accessToken: authResponse.access_token,
       };
     } catch (error) {
       logAxiosError(error, 'initialize auth');
+
       return null;
     }
   }
@@ -100,6 +112,7 @@ class AuthService {
   async signup(userData: SignupData): Promise<User> {
     try {
       const response = await this.api.post('/auth/register', userData);
+
       return response.data;
     } catch (error) {
       logAxiosError(error, 'signup');
@@ -110,6 +123,7 @@ class AuthService {
   async getCurrentUser(): Promise<User> {
     try {
       const response = await this.api.get('/auth/me');
+
       return response.data;
     } catch (error) {
       logAxiosError(error, 'get current user');
@@ -131,6 +145,7 @@ class AuthService {
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
       const isExpired = payload.exp * 1000 < Date.now();
+
       return !isExpired;
     } catch {
       return false;

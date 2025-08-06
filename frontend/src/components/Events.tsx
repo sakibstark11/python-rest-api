@@ -20,7 +20,6 @@ const defaultView = Views.WEEK;
 const today = new Date();
 let currentStartDate: Date = moment(today).startOf(defaultView).toDate();
 let currentEndDate: Date = moment(today).endOf(defaultView).toDate();
-let currentView: string = defaultView;
 
 function handleEventUpdate(events: Event[], updatedEvent: Event): Event[] {
   const existingIndex = events.findIndex(event => event.id === updatedEvent.id);
@@ -46,18 +45,19 @@ export default function WeeklyEvents() {
   const theme = useTheme();
   const { showSuccess, showInfo, showError } = useSnackBar();
 
-  const fetchEventsInRange = useCallback(async (centerDate: Date, view: typeof Views.DAY | typeof Views.MONTH | typeof Views.WEEK) => {  
+  const shouldFetchEvents = (centerDate: Date, view: typeof Views.DAY | typeof Views.MONTH | typeof Views.WEEK) => {
     const start = moment(centerDate).startOf(view).toDate();
     const end = moment(centerDate).endOf(view).toDate();
 
-    if (currentView === view && start >= currentStartDate && end <= currentEndDate) {
-      return;
-    }
-
+    if (start >= currentStartDate && end <= currentEndDate) {
+      return false;
+    }  
     currentStartDate = start;
     currentEndDate = end;
-    currentView = view;
+    return true;
+  };
 
+  const fetchEventsInRange = useCallback(async (start: Date, end: Date) => {
     try {
       setAppState({ loading: true });
 
@@ -76,7 +76,7 @@ export default function WeeklyEvents() {
   }, [setAppState]);
 
   useEffect(() => {
-    fetchEventsInRange(today, defaultView);
+    fetchEventsInRange(currentStartDate, currentEndDate);
   }, [fetchEventsInRange]);
 
   useEffect(() => {
@@ -151,7 +151,7 @@ export default function WeeklyEvents() {
     root.style.setProperty('--mui-palette-text-primary', theme.palette.text.primary);
     root.style.setProperty('--mui-palette-text-secondary', theme.palette.text.secondary);
     root.style.setProperty('--mui-palette-text-disabled', theme.palette.text.disabled);
-    root.style.setProperty('--mui-palette-divider', theme.palette.divider);
+    root.style.setProperty('--mui-calendar-border', theme.palette.mode === 'dark' ? theme.palette.grey[700] : theme.palette.grey[200]);
     root.style.setProperty('--mui-palette-action-hover', theme.palette.action.hover);
     root.style.setProperty('--mui-palette-action-selected', theme.palette.action.selected);
     root.style.setProperty('--mui-palette-action-disabledBackground', theme.palette.action.disabledBackground);
@@ -183,7 +183,9 @@ export default function WeeklyEvents() {
         style={{ height: 'calc(100vh - 64px - 32px)', width: '100%', overflow: 'auto' }}
         onNavigate={(date, view) => {
           if (view !== Views.AGENDA && view !== Views.WORK_WEEK) {
-            fetchEventsInRange(date, view);
+            if (shouldFetchEvents(date, view)) {
+              fetchEventsInRange(currentStartDate, currentEndDate);
+            }
           }
         }}
         onSelectEvent={event => {

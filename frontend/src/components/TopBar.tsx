@@ -32,6 +32,7 @@ export default function TopBar() {
 
   const handleLogout = async() => {
     try {
+      console.log('Logging out...');
       await authService.logout();
       authService.removeToken();
       setAppState({
@@ -85,8 +86,8 @@ export default function TopBar() {
               transformOrigin={{ horizontal: 'right', vertical: 'top' }}
               anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
             >
-              <MenuItem>
-                <ListItemIcon onClick={handleLogout}>
+              <MenuItem onClick={handleLogout}>
+                <ListItemIcon>
                   <Logout fontSize="small" />
                 </ListItemIcon>
                 Logout

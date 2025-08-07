@@ -1,11 +1,10 @@
 import uvicorn
-from api.main import app
 from core.config import settings
 
 
 def start_server():
     uvicorn.run(
-        app,
+        'api.main:app',
         host='0.0.0.0',
         port=settings.port,
         reload=settings.environment != 'production',

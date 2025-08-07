@@ -32,7 +32,6 @@ export default function TopBar() {
 
   const handleLogout = async() => {
     try {
-      console.log('Logging out...');
       await authService.logout();
       authService.removeToken();
       setAppState({

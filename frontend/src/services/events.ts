@@ -6,18 +6,28 @@ import { authService } from './auth';
 export class EventService {
   private api: AxiosInstance;
 
+  private currentAbortController: AbortController | null = null;
+
   constructor(apiInstance: AxiosInstance) {
     this.api = apiInstance;
   }
 
-  public async getEvents(startDate?: string, endDate?: string): Promise<Event[]> {
+  private handleAbort() {
+    if (this.currentAbortController) {
+      this.currentAbortController.abort();
+      console.warn('Previous request aborted due to new request');
+    }
+    this.currentAbortController = new AbortController();
+  }
+
+  public async getEvents(startDate: string, endDate: string): Promise<Event[]> {
     try {
-      const params = new URLSearchParams();
-
-      if (startDate) params.append('start_date', startDate);
-      if (endDate) params.append('end_date', endDate);
-
-      const response = await this.api.get(`/events/?start_date=${startDate}&end_date=${endDate}`);
+      this.handleAbort();
+      const response = await this.api.get(
+        `/events/?start_date=${startDate}&end_date=${endDate}`,
+        {
+          signal: this.currentAbortController?.signal,
+        });
 
       return response.data;
     } catch (error) {
@@ -28,7 +38,10 @@ export class EventService {
 
   public async getEvent(eventId: string): Promise<Event> {
     try {
-      const response = await this.api.get(`/events/${eventId}`);
+      this.handleAbort();
+      const response = await this.api.get(`/events/${eventId}`, {
+        signal: this.currentAbortController?.signal,
+      });
 
       return response.data;
     } catch (error) {
@@ -39,7 +52,10 @@ export class EventService {
 
   public async createEvent(eventData: EventCreate): Promise<Event> {
     try {
-      const response = await this.api.post('/events/', eventData);
+      this.handleAbort();
+      const response = await this.api.post('/events/', eventData, {
+        signal: this.currentAbortController?.signal,
+      });
 
       return response.data;
     } catch (error) {
@@ -48,9 +64,13 @@ export class EventService {
     }
   }
 
-  public async updateEvent(eventId: string, eventData: Partial<EventCreate>): Promise<Event> {
+  public async updateEvent(eventId: string, eventData: Partial<EventCreate>):
+    Promise<Event> {
     try {
-      const response = await this.api.put(`/events/${eventId}`, eventData);
+      this.handleAbort();
+      const response = await this.api.put(`/events/${eventId}`, eventData, {
+        signal: this.currentAbortController?.signal,
+      });
 
       return response.data;
     } catch (error) {
@@ -61,18 +81,25 @@ export class EventService {
 
   public async deleteEvent(eventId: string): Promise<void> {
     try {
-      await this.api.delete(`/events/${eventId}`);
+      this.handleAbort();
+      await this.api.delete(`/events/${eventId}`, {
+        signal: this.currentAbortController?.signal,
+      });
     } catch (error) {
       logAxiosError(error, 'delete event');
       throw error;
     }
   }
 
-  public async respondToEvent(eventId: string, status: 'accepted' | 'declined'): Promise<void> {
+  public async respondToEvent(eventId: string, status: 'accepted' | 'declined'):
+    Promise<void> {
     try {
+      this.handleAbort();
       await this.api.post(`/events/${eventId}/respond`, {
         event_id: eventId,
         status,
+      }, {
+        signal: this.currentAbortController?.signal,
       });
     } catch (error) {
       logAxiosError(error, 'respond to event');
